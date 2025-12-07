@@ -39,6 +39,7 @@ enum class TokenType {
     EndOfFile, EndOfLine, Unknown
 };
 
+// Token定义
 struct Token {
     TokenType type;
     std::string text;
