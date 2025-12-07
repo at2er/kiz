@@ -88,6 +88,7 @@ Vm::Vm(const std::string& file_path) : file_path(file_path) {
     based_list->attrs.insert("__mul__", new CppFunction(list_mul));
     based_list->attrs.insert("__contains__", new CppFunction(list_contains));
     based_list->attrs.insert("__eq__", new CppFunction(list_eq));
+    based_list->attrs.insert("append", new CppFunction(list_append));
 
     // String 类型魔法方法
     based_str->attrs.insert("__add__", new CppFunction(str_add));
