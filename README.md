@@ -27,7 +27,7 @@ True Nil False
     - **debug&fix** 测试注释
     - **debug&fix** 测试完整的parser
     - **debug&fix** 测试set nonlocal和set global
-    - **feature** 完成 >= <= (通过编译为NOT GT, NOT LT) 这样的字节码
+    - **feature** 完成 >= <= (通过添加为OP_GE, OP_LE)
     - **feature** 完成 and not or in运算符(在vm中要支持判断model::Bool, 如果对象不是model::Bool, 需尝试调用Object::magic_bool魔术方法)
     - **feature** 所有报错使用util::err_reporter函数代替现在临时的assert
     - **feature** 添加对于运行时错误的报错器的TraceBack输出
