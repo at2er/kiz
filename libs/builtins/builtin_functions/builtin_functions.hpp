@@ -67,4 +67,56 @@ inline auto isinstance = [](model::Object* self, const model::List* args) -> mod
     
 };
 
+inline auto help = [](model::Object* self, const model::List* args) -> model::Object* {
+
+};
+
+inline auto breakpointer = [](model::Object* self, const model::List* args) -> model::Object* {
+
+};
+
+inline auto range = [](model::Object* self, const model::List* args) -> model::Object* {
+
+};
+
+inline auto cmd = [](model::Object* self, const model::List* args) -> model::Object* {
+
+};
+
+inline auto now = [](model::Object* self, const model::List* args) -> model::Object* {
+
+};
+
+inline auto setattr = [](model::Object* self, const model::List* args) -> model::Object* {
+
+};
+
+inline auto getattr = [](model::Object* self, const model::List* args) -> model::Object* {
+
+};
+
+inline auto delattr = [](model::Object* self, const model::List* args) -> model::Object* {
+
+};
+
+inline auto locals = [](model::Object* self, const model::List* args) -> model::Object* {
+
+};
+
+inline auto globals = [](model::Object* self, const model::List* args) -> model::Object* {
+
+};
+
+inline auto getrefc = [](model::Object* self, const model::List* args) -> model::Object* {
+
+};
+
+inline auto copy = [](model::Object* self, const model::List* args) -> model::Object* {
+
+};
+
+inline auto typeof = [](model::Object* self, const model::List* args) -> model::Object* {
+
+};
+
 }
