@@ -19,3 +19,15 @@
 #else
 #define DEBUG_OUTPUT(msg) ((void)0)
 #endif
+
+#include <exception>
+#include <string>
+
+class KizStopExecSignal : public std::runtime_error {
+public:
+    KizStopExecSignal() noexcept
+        : std::runtime_error("kiz-lang 执行终止信号") {}
+
+    explicit KizStopExecSignal(const std::string& msg) noexcept
+        : std::runtime_error(msg) {}
+};
