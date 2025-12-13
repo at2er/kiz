@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <string>
 #include "repl/color.hpp"
 #include "version.hpp"
 
@@ -31,3 +32,13 @@ public:
     explicit KizStopExecSignal(const std::string& msg) noexcept
         : std::runtime_error(msg) {}
 };
+
+namespace kiz {
+struct Position {
+    // std::string file_path;
+    size_t lineno_start;
+    size_t lineno_end;
+    size_t colum_start;
+    size_t colum_end;
+};
+}
