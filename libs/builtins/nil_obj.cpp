@@ -3,7 +3,7 @@
 namespace model {
 
 // Nil 相等判断：仅当另一个对象也是Nil时返回true
-inline auto nil_eq = [](Object* self, const List* args) -> Object* {
+model::Object* nil_eq(model::Object* self, const model::List* args) {
     DEBUG_OUTPUT("You given " + std::to_string(args->val.size()) + " arguments (nil_eq)");
     assert(args->val.size() == 1 && "function Nil.eq need 1 arg");
     
