@@ -121,7 +121,7 @@ void IRGenerator::gen_expr(Expression* expr) {
             gen_expr(get_mem->father.get()); // 生成对象IR
             gen_expr(set_mem->val.get());   // 生成值IR
 
-            size_t name_idx = get_or_add_name(curr_names, get_mem->child->name);
+            size_t name_idx = get_or_add_name(curr_names, get_mem);
             curr_code_list.emplace_back(
             Opcode::SET_ATTR,
                 std::vector<size_t>{name_idx},
@@ -229,31 +229,47 @@ void IRGenerator::gen_fn_call(CallExpr* call_expr) {
     assert(call_expr && "gen_fn_call: 函数调用节点为空");
     size_t arg_count = call_expr->args.size();
 
-    // 生成所有参数的IR
+    // 生成所有参数的IR，最终打包成List（与原逻辑一致）
     for (auto& arg : call_expr->args) {
         gen_expr(arg.get());
     }
 
-    // 生成 OP_MAKE_LIST 指令：将栈顶 arg_count 个元素打包成 List，压回栈
+    // 生成 OP_MAKE_LIST 指令：将栈顶 arg_count 个元素打包成参数列表，压回栈
     curr_code_list.emplace_back(
         Opcode::MAKE_LIST,
-        std::vector<size_t>{arg_count},  // 操作数：需要打包的元素个数
+        std::vector<size_t>{arg_count},
         call_expr->start_ln,
         call_expr->end_ln
     );
     curr_lineno_map.emplace_back(curr_code_list.size() - 1, call_expr->start_ln);
 
-    // 生成函数对象的IR（压到栈顶）
-    gen_expr(call_expr->callee.get());
+    // 判断 callee 是否为 GetMemberExpr
+    if (auto* member_expr = dynamic_cast<GetMemberExpr*>(call_expr->callee.get())) {
+        gen_expr(member_expr->father.get()); 
 
-    // 生成 CALL 指令（操作数保留参数个数，用于 Function 校验参数数量）
-    curr_code_list.emplace_back(
-        Opcode::CALL,
-        std::vector<size_t>{arg_count},  // 仍传参数个数（Function 需校验 List 元素个数）
-        call_expr->start_ln,
-        call_expr->end_ln
-    );
-    curr_lineno_map.emplace_back(curr_code_list.size() - 1, call_expr->start_ln);
+        // 获取方法名的字符串常量池索引
+        const std::string& method_name = member_expr->child;
+        size_t method_name_idx = get_or_add_name(curr_names, method_name); 
+
+        // 生成 CALL_METHOD 指令：操作数为 方法名索引 + 参数个数（用于校验）
+        curr_code_list.emplace_back(
+            Opcode::CALL_METHOD,
+            std::vector<size_t>{method_name_idx, arg_count},
+            call_expr->start_ln,
+            call_expr->end_ln
+        );
+        curr_lineno_map.emplace_back(curr_code_list.size() - 1, call_expr->start_ln);
+    } else {
+        // 普通函数调用：生成函数对象IR → 生成 CALL 指令
+        gen_expr(call_expr->callee.get());
+        curr_code_list.emplace_back(
+            Opcode::CALL,
+            std::vector<size_t>{arg_count},
+            call_expr->start_ln,
+            call_expr->end_ln
+        );
+        curr_lineno_map.emplace_back(curr_code_list.size() - 1, call_expr->start_ln);
+    }
 }
 
 void IRGenerator::gen_dict(DictDeclExpr* expr) {
