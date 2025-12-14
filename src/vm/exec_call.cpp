@@ -66,7 +66,9 @@ void Vm::call_function(model::Object* func_obj, model::Object* args_obj, model::
 
         // 校验参数数量
         size_t required_argc = func->argc;
-        size_t actual_argc = args_list->val.size();
+        size_t actual_argc = self
+            ? args_list->val.size() + 1
+            : args_list->val.size();
         if (actual_argc != required_argc) {
             func_obj->del_ref();
             args_obj->del_ref();
@@ -82,6 +84,9 @@ void Vm::call_function(model::Object* func_obj, model::Object* args_obj, model::
         new_frame->return_to_pc = call_stack_.back()->pc + 1;
         new_frame->names = func->code->names;
         new_frame->is_week_scope = false;
+
+        // 储存self
+        args_list.emplace(args_list.begin(), self);
 
         // 从参数列表中提取参数，存入调用帧 locals
         for (size_t i = 0; i < required_argc; ++i) {
