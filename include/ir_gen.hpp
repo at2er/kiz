@@ -24,7 +24,6 @@ class IRGenerator {
     std::vector<std::string> curr_names;
     std::vector<Instruction> curr_code_list;
     std::vector<model::Object*> curr_consts;
-    std::vector<std::tuple<size_t, size_t>> curr_lineno_map;
 
     const std::string& file_path;
 public:

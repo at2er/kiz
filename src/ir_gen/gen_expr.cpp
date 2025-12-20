@@ -22,7 +22,6 @@ void IRGenerator::gen_expr(Expression* expr) {
                 Opcode::LOAD_VAR,
                 std::vector<size_t>{name_idx}
             );
-            curr_lineno_map.emplace_back(curr_code_list.size() - 1, expr->start_ln);
             break;
         }
         case AstType::BinaryExpr: {
@@ -53,7 +52,6 @@ void IRGenerator::gen_expr(Expression* expr) {
                 opc,
                 std::vector<size_t>{}
             );
-            curr_lineno_map.emplace_back(curr_code_list.size() - 1, expr->start_ln);
             break;
         }
         case AstType::UnaryExpr: {
@@ -70,7 +68,6 @@ void IRGenerator::gen_expr(Expression* expr) {
                 opc,
                 std::vector<size_t>{}
             );
-            curr_lineno_map.emplace_back(curr_code_list.size() - 1, expr->start_ln);
             break;
         }
         case AstType::CallExpr:
@@ -140,7 +137,7 @@ void IRGenerator::gen_expr(Expression* expr) {
                 curr_code_list,
                 curr_consts,
                 curr_names,
-                curr_lineno_map
+                {}
             );
 
             // 生成lambda函数体IR
@@ -202,7 +199,6 @@ void IRGenerator::gen_fn_call(CallExpr* call_expr) {
         Opcode::MAKE_LIST,
         std::vector<size_t>{arg_count}
     );
-    curr_lineno_map.emplace_back(curr_code_list.size() - 1, call_expr->start_ln);
 
     // 判断 callee 是否为 GetMemberExpr
     if (auto* member_expr = dynamic_cast<GetMemberExpr*>(call_expr->callee.get())) {
@@ -217,7 +213,6 @@ void IRGenerator::gen_fn_call(CallExpr* call_expr) {
             Opcode::CALL_METHOD,
             std::vector<size_t>{method_name_idx, arg_count}
         );
-        curr_lineno_map.emplace_back(curr_code_list.size() - 1, call_expr->start_ln);
     } else {
         // 普通函数调用：生成函数对象IR → 生成 CALL 指令
         gen_expr(call_expr->callee.get());
@@ -225,7 +220,6 @@ void IRGenerator::gen_fn_call(CallExpr* call_expr) {
             Opcode::CALL,
             std::vector<size_t>{arg_count}
         );
-        curr_lineno_map.emplace_back(curr_code_list.size() - 1, call_expr->start_ln);
     }
 }
 
@@ -254,7 +248,6 @@ void IRGenerator::gen_dict(DictDeclExpr* expr) {
         Opcode::LOAD_CONST,
         std::vector<size_t>{dict_const_idx}
     );
-    curr_lineno_map.emplace_back(curr_code_list.size() - 1, expr->start_ln);
 }
 
 void IRGenerator::gen_literal(Expression* expr) {
@@ -279,7 +272,6 @@ void IRGenerator::gen_literal(Expression* expr) {
         Opcode::LOAD_CONST,
         std::vector<size_t>{const_idx}
     );
-    curr_lineno_map.emplace_back(curr_code_list.size() - 1, expr->start_ln);
 }
 
 }

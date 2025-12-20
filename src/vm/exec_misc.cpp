@@ -61,7 +61,6 @@ void Vm::exec_JUMP(const Instruction& instruction) {
     if (target_pc > curr_frame->code_object->code.size()) {
         assert(false && "JUMP: 目标pc超出字节码范围");
     }
-    call_stack_.back()->pc ++;
     call_stack_.back()->pc = target_pc;
 }
 
@@ -74,7 +73,7 @@ void Vm::exec_JUMP_IF_FALSE(const Instruction& instruction) {
     // 取出条件值
     model::Object* cond = op_stack_.top();
     op_stack_.pop();
-    size_t target_pc = instruction.opn_list[0];
+    const size_t target_pc = instruction.opn_list[0];
 
     bool need_jump = check_obj_is_true(cond) ? false: true;
 

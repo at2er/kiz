@@ -180,9 +180,6 @@ void IRGenerator::gen_if(IfStmt* if_stmt) {
 
     // 填充JUMP的目标（if-else结束位置）
     curr_code_list[jump_else_idx].opn_list[0] = curr_code_list.size();
-
-    // 记录行号映射
-    curr_lineno_map.emplace_back(curr_code_list.size() - 1, if_stmt->end_ln);
 }
 
 void IRGenerator::gen_while(WhileStmt* while_stmt) {
@@ -220,9 +217,6 @@ void IRGenerator::gen_while(WhileStmt* while_stmt) {
     // 弹出循环栈帧
     block_stack.pop();
     block_stack.pop();
-
-    // 记录行号映射
-    curr_lineno_map.emplace_back(curr_code_list.size() - 1, while_stmt->end_ln);
 }
 
 }

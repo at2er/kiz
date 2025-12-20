@@ -48,21 +48,25 @@ model::Module* IRGenerator::gen(std::unique_ptr<BlockStmt> ast_into) {
     curr_code_list.clear();
     curr_names.clear();
     curr_consts.clear();
-    curr_lineno_map.clear();
 
     // 处理模块顶层节点
     gen_block(root_block);
 
     DEBUG_OUTPUT("gen : ir result");
     for (const auto& inst : curr_code_list) {
-        DEBUG_OUTPUT(opcode_to_string(inst.opc));
+        std::string opn_text;
+        for (auto opn : inst.opn_list)
+        {
+            opn_text += std::to_string(opn) + ",";
+        }
+        DEBUG_OUTPUT(opcode_to_string(inst.opc)+opn_text);
     }
 
     return gen_mod(file_path,
         curr_names,
         curr_code_list,
         curr_consts,
-        curr_lineno_map
+        {}
     );
 }
 
@@ -81,7 +85,7 @@ model::CodeObject* IRGenerator::make_code_obj() const {
     }
 
     const auto code_obj = new model::CodeObject(
-        curr_code_list, consts, curr_names, curr_lineno_map
+        curr_code_list, consts, curr_names, {}
     );
     return code_obj;
 }

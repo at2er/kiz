@@ -104,6 +104,7 @@ std::unique_ptr<IfStmt> Parser::parse_if() {
             else_block = parse_if_block(); // 替换为parse_if_block
         }
     }
+    skip_token("end");
 
     return std::make_unique<IfStmt>(std::move(cond_expr), std::move(if_block), std::move(else_block));
 }
