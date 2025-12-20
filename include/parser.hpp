@@ -48,7 +48,7 @@ private:
 
     // parse factor
     std::unique_ptr<Expression> parse_primary();
-    std::vector<std::unique_ptr<Expression>> parse_params(TokenType endswith);
+    std::vector<std::unique_ptr<Expression>> parse_args(TokenType endswith);
 };
 
 } // namespace kiz

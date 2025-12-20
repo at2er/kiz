@@ -1,6 +1,7 @@
 #include "parser.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <memory>
 #include <vector>
 
@@ -149,13 +150,13 @@ std::unique_ptr<Expression> Parser::parse_factor() {
         }
         else if (curr_token().type == TokenType::LBracket) {
             skip_token("[");
-            auto param = parse_params(TokenType::RBracket);
+            auto param = parse_args(TokenType::RBracket);
             skip_token("]");
             node = std::make_unique<GetItemExpr>(std::move(node),std::move(param));
         }
         else if (curr_token().type == TokenType::LParen) {
             skip_token("(");
-            auto param = parse_params(TokenType::RParen);
+            auto param = parse_args(TokenType::RParen);
             skip_token(")");
             node = std::make_unique<CallExpr>(std::move(node),std::move(param));
         }
@@ -186,20 +187,50 @@ std::unique_ptr<Expression> Parser::parse_primary() {
         return std::make_unique<IdentifierExpr>(tok.text);
     }
     if (tok.type == TokenType::Func) {
-        std::vector<std::string> params{};
-        if (curr_token().type == TokenType::Pipe) {
-            skip_token("|");
-            while (curr_token().type != TokenType::Pipe) {
-                params.emplace_back(skip_token().text);
-                if (curr_token().type == TokenType::Comma) skip_token(",");
+        skip_token("fn");
+        // 读取函数名（必须是标识符）
+        const Token func_name_tok = skip_token();
+        if (func_name_tok.type != TokenType::Identifier) {
+            // std::cerr << Color::RED
+            //           << "[Syntax Error] Function name must be an identifier, got '"
+            //           << func_name_tok.text << "' (Line: " << func_name_tok.line << ")"
+            //           << Color::RESET << std::endl;
+            // assert(false && "Invalid function name");
+        }
+        const std::string func_name = func_name_tok.text;
+
+        // 解析参数列表（()包裹，逻辑不变）
+        std::vector<std::string> func_params;
+        if (curr_token().type == TokenType::LParen) {
+            skip_token("(");
+            while (curr_token().type != TokenType::RParen) {
+                const Token param_tok = skip_token();
+                if (param_tok.type != TokenType::Identifier) {
+                    std::cerr << Color::RED
+                              << "[Syntax Error] Function parameter must be an identifier, got '"
+                              << param_tok.text << "' (Line: " << param_tok.pos.lno_start << ")"
+                              << Color::RESET << std::endl;
+                    assert(false && "Invalid function parameter");
+                }
+                func_params.push_back(param_tok.text);
+                // 处理参数间的逗号
+                if (curr_token().type == TokenType::Comma) {
+                    skip_token(",");
+                } else if (curr_token().type != TokenType::RParen) {
+                    std::cerr << Color::RED
+                              << "[Syntax Error] Expected ',' or ')' in function parameters, got '"
+                              << curr_token().text << "'"
+                              << Color::RESET << std::endl;
+                    assert(false && "Mismatched function parameters");
+                }
             }
-            skip_token("|");
+            skip_token(")");  // 跳过右括号
         }
 
-        skip_token("{");
-        auto stmt = parse_block();
-        skip_token("}");
-        return std::make_unique<FnDeclExpr>("<lambda>", std::move(params),std::move(stmt));
+        // 解析函数体（无大括号，用end结尾）
+        skip_start_of_block();  // 跳过参数后的换行
+        auto func_body = parse_block();  // 函数体为非全局作用域
+        return std::make_unique<FnDeclExpr>("<lambda>", std::move(func_params),std::move(func_body));
     }
     if (tok.type == TokenType::Pipe) {
         std::vector<std::string> params;
@@ -232,7 +263,7 @@ std::unique_ptr<Expression> Parser::parse_primary() {
         return std::make_unique<DictDeclExpr>("<lambda_dict>", std::move(init_vec));
     }
     if (tok.type == TokenType::LBracket) {
-        auto param = parse_params(TokenType::RBracket);
+        auto param = parse_args(TokenType::RBracket);
         skip_token("]");
         return std::make_unique<ListExpr>(std::move(param));
     }
@@ -244,7 +275,7 @@ std::unique_ptr<Expression> Parser::parse_primary() {
     return nullptr;
 }
 
-std::vector<std::unique_ptr<Expression>> Parser::parse_params(const TokenType endswith){
+std::vector<std::unique_ptr<Expression>> Parser::parse_args(const TokenType endswith){
     std::vector<std::unique_ptr<Expression>> params;
     while (curr_token().type != endswith) {
         params.emplace_back(parse_expression());

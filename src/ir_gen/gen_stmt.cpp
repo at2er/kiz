@@ -50,7 +50,7 @@ void IRGenerator::gen_block(const BlockStmt* block) {
             }
             case AstType::NonlocalAssignStmt: {
                 // 变量声明：生成初始化表达式IR + 存储变量指令
-                const auto* var_decl = dynamic_cast<AssignStmt*>(stmt.get());
+                const auto* var_decl = dynamic_cast<NonlocalAssignStmt*>(stmt.get());
                 gen_expr(var_decl->expr.get()); // 生成初始化表达式IR
                 const size_t name_idx = get_or_add_name(curr_names, var_decl->name);
 
@@ -63,7 +63,7 @@ void IRGenerator::gen_block(const BlockStmt* block) {
 
             case AstType::GlobalAssignStmt: {
                 // 变量声明：生成初始化表达式IR + 存储变量指令
-                const auto* var_decl = dynamic_cast<AssignStmt*>(stmt.get());
+                const auto* var_decl = dynamic_cast<GlobalAssignStmt*>(stmt.get());
                 gen_expr(var_decl->expr.get()); // 生成初始化表达式IR
                 const size_t name_idx = get_or_add_name(curr_names, var_decl->name);
 
@@ -111,22 +111,33 @@ void IRGenerator::gen_block(const BlockStmt* block) {
                 );
                 break;
             }
-            case AstType::BreakStmt:
-                // Break语句：跳转到循环结束位置（依赖block_stack记录循环出口）
-                assert(!block_stack.empty() && "BreakStmt: 无活跃循环块");
+            case AstType::BreakStmt: {
+                // 修复：BreakStmt 跳转逻辑 - 从栈中获取JUMP_IF_FALSE指令索引，取其目标作为循环结束位置
+                assert(block_stack.size() >= 2 && "BreakStmt: 无活跃循环块（需至少包含continue/break两个标记）");
+                // 栈结构：top → break标记（JUMP_IF_FALSE指令索引），next → continue标记（循环入口）
+                size_t jump_if_false_idx = block_stack.top(); // 获取JUMP_IF_FALSE指令的索引
+                size_t loop_exit_idx = curr_code_list[jump_if_false_idx].opn_list[0]; // 循环结束位置
                 curr_code_list.emplace_back(
                     Opcode::JUMP,
-                    std::vector<size_t>{block_stack.top()}
+                    std::vector<size_t>{loop_exit_idx}
                 );
                 break;
-            case AstType::NextStmt:
-                // Continue语句：跳转到循环条件位置（依赖block_stack记录循环入口）
-                assert(block_stack.size() >= 2 && "NextStmt: 无活跃循环块");
+            }
+            case AstType::NextStmt: {
+                // 修复：ContinueStmt 跳转逻辑 - 正确获取循环入口地址
+                assert(block_stack.size() >= 2 && "NextStmt: 无活跃循环块（需至少包含continue/break两个标记）");
+                // 临时弹出break标记，取continue标记，再恢复
+                size_t break_mark = block_stack.top();
+                block_stack.pop();
+                size_t loop_entry_idx = block_stack.top(); // 循环入口（条件判断位置）
+                block_stack.push(break_mark);
+
                 curr_code_list.emplace_back(
                     Opcode::JUMP,
-                    std::vector<size_t>{block_stack.top()}
+                    std::vector<size_t>{loop_entry_idx}
                 );
                 break;
+            }
             case AstType::SetMemberStmt: {
                 // 设置成员：生成对象表达式 -> 生成值表达式 -> 加载属性名 -> SET_ATTR指令
                 const auto* set_mem = dynamic_cast<SetMemberStmt*>(stmt.get());
@@ -184,39 +195,40 @@ void IRGenerator::gen_if(IfStmt* if_stmt) {
 
 void IRGenerator::gen_while(WhileStmt* while_stmt) {
     assert(while_stmt && "gen_while: while节点为空");
-    // 记录循环入口位置（条件判断开始）
+    // 记录循环入口（条件判断开始位置）→ continue跳这里
     size_t loop_entry_idx = curr_code_list.size();
-    block_stack.push(loop_entry_idx); // 用于continue跳转
 
     // 生成循环条件IR
     gen_expr(while_stmt->condition.get());
 
-    // 生成JUMP_IF_FALSE指令（目标：循环结束位置，占位）
-    const size_t jump_out_idx = curr_code_list.size();
+    // 生成JUMP_IF_FALSE指令（目标：循环结束位置，先占位）
+    const size_t jump_if_false_idx = curr_code_list.size();
     curr_code_list.emplace_back(
         Opcode::JUMP_IF_FALSE,
-        std::vector<size_t>{0}
+        std::vector<size_t>{0} // 占位，后续填充为循环结束位置
     );
 
-    // 记录循环体结束位置（用于break跳转）
-    size_t loop_exit_idx = curr_code_list.size();
-    block_stack.push(loop_exit_idx); // 用于break跳转
+    // 修复：调整block_stack压入内容
+    // 栈结构：先压continue标记（循环入口），再压break标记（JUMP_IF_FALSE指令索引）
+    block_stack.push(loop_entry_idx);    // continue → 跳回循环入口
+    block_stack.push(jump_if_false_idx); // break → 关联JUMP_IF_FALSE指令（后续取其目标）
 
     // 生成循环体IR
     gen_block(while_stmt->body.get());
 
-    // 生成JUMP指令（跳回循环入口）
+    // 生成JUMP指令，跳回循环入口
     curr_code_list.emplace_back(
         Opcode::JUMP,
         std::vector<size_t>{loop_entry_idx}
     );
 
-    // 填充JUMP_IF_FALSE的目标（循环结束位置）
-    curr_code_list[jump_out_idx].opn_list[0] = curr_code_list.size();
+    // 填充JUMP_IF_FALSE的目标（循环结束位置 = 当前代码列表长度）
+    size_t loop_exit_idx = curr_code_list.size();
+    curr_code_list[jump_if_false_idx].opn_list[0] = loop_exit_idx;
 
-    // 弹出循环栈帧
-    block_stack.pop();
-    block_stack.pop();
+    // 弹出循环栈帧（顺序与push相反）
+    block_stack.pop(); // 弹出break标记
+    block_stack.pop(); // 弹出continue标记
 }
 
 }
