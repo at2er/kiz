@@ -46,10 +46,18 @@ model::Object* breakpointer(model::Object* self, const model::List* args) {
         std::cout << "Frame [" << i << "] " << frame->name << "\n";
         std::cout << "=================================" << "\n";
         std::cout << "Pc: " << frame->pc << "\n";
-        std::cout << "Locals: " << frame->locals.to_string() << "\n";
-        std::cout << "Names: ";
 
+        std::cout << "Locals: " << "\n";
         size_t j = 1;
+        auto locals_vector = frame->locals.to_vector();
+        for (const auto& [n, l] : locals_vector) {
+            std::cout << n << " = " << l->to_string();
+            ++j;
+        }
+        
+        std::cout << "\n";
+        std::cout << "Names: ";
+        j = 1;
         for (const auto& n: frame->code_object->names) {
             std::cout << n;
             if (j<frame->code_object->names.size()) std::cout << ", ";
