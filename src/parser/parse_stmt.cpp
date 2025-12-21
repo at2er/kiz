@@ -136,39 +136,19 @@ std::unique_ptr<Statement> Parser::parse_stmt() {
     if (curr_tok.type == TokenType::Func) {
         DEBUG_OUTPUT("parsing function");
         skip_token("fn");
-        // 读取函数名（必须是标识符）
-        const Token func_name_tok = skip_token();
-        if (func_name_tok.type != TokenType::Identifier) {
-            // std::cerr << Color::RED
-            //           << "[Syntax Error] Function name must be an identifier, got '"
-            //           << func_name_tok.text << "' (Line: " << func_name_tok.line << ")"
-            //           << Color::RESET << std::endl;
-            // assert(false && "Invalid function name");
-        }
-        const std::string func_name = func_name_tok.text;
+        // 读取函数名
+        const std::string func_name = skip_token().text;
 
         // 解析参数列表（()包裹，逻辑不变）
         std::vector<std::string> func_params;
         if (curr_token().type == TokenType::LParen) {
             skip_token("(");
             while (curr_token().type != TokenType::RParen) {
-                const Token param_tok = skip_token();
-                if (param_tok.type != TokenType::Identifier) {
-                    std::cerr << Color::RED
-                              << "[Syntax Error] Function parameter must be an identifier, got '"
-                              << param_tok.text << "' (Line: " << param_tok.pos.lno_start << ")"
-                              << Color::RESET << std::endl;
-                    assert(false && "Invalid function parameter");
-                }
-                func_params.push_back(param_tok.text);
+                func_params.push_back(skip_token().text);
                 // 处理参数间的逗号
                 if (curr_token().type == TokenType::Comma) {
                     skip_token(",");
                 } else if (curr_token().type != TokenType::RParen) {
-                    std::cerr << Color::RED
-                              << "[Syntax Error] Expected ',' or ')' in function parameters, got '"
-                              << curr_token().text << "'"
-                              << Color::RESET << std::endl;
                     assert(false && "Mismatched function parameters");
                 }
             }
@@ -177,7 +157,7 @@ std::unique_ptr<Statement> Parser::parse_stmt() {
 
         // 解析函数体（无大括号，用end结尾）
         skip_start_of_block();  // 跳过参数后的换行
-        auto func_body = parse_block();  // 函数体为非全局作用域
+        auto func_body = parse_block();
 
         // 生成函数定义语句节点
         return std::make_unique<AssignStmt>(func_name, std::make_unique<FnDeclExpr>(
@@ -224,6 +204,7 @@ std::unique_ptr<Statement> Parser::parse_stmt() {
         skip_end_of_ln();
         return std::make_unique<ImportStmt>(import_path);
     }
+
     // 解析nonlocal语句
     if (curr_tok.type == TokenType::Nonlocal) {
         DEBUG_OUTPUT("parsing nonlocal");
@@ -275,18 +256,17 @@ std::unique_ptr<Statement> Parser::parse_stmt() {
         // 非成员访问表达式后不能跟 =
         assert("invalid assignment target: expected member access");
     }
+
     if (expr != nullptr) {
         skip_end_of_ln();
         return std::make_unique<ExprStmt>(std::move(expr));
     }
 
-    // 跳过无效Token（容错处理）
-    while (curr_tok_idx_ < tokens_.size() && curr_token().type != TokenType::EndOfLine) {
-        skip_token();  // 跳过当前无效Token
+    // 跳过换行
+    while (curr_token() == TokenType::EndOfLine) {
+        skip_token("\n");
     }
-    if (curr_tok_idx_ < tokens_.size()) {
-        skip_token();  // 跳过换行符
-    }
+
     return nullptr;  // 无有效语句，返回空
 }
 
