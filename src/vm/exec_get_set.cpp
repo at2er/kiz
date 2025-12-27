@@ -54,7 +54,7 @@ void Vm::exec_LOAD_VAR(const Instruction& instruction) {
             auto var_it = owner_module->attrs.find(var_name);
 
         }
-        else assert((var_it != nullptr) && "LOAD_VAR: 局部变量未定义");
+        else throw_error({"NameError", "Undefined var '"+var_name+"'"});
     }
 
     model::Object* var_val = var_it->value;
