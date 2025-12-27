@@ -62,7 +62,7 @@ public:
     static void set_main_module(model::Module* src_module);
     static void exec_curr_code();
     static void set_curr_code(const model::CodeObject* code_object);
-    static void throw_error (err::PositionInfo& pos, err::ErrorInfo& err);
+    static void throw_error (err::ErrorInfo& err);
     static void load_required_modules(const deps::HashMap<model::Module*>& modules);
     
     static model::Object* get_stack_top();
