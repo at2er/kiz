@@ -256,10 +256,7 @@ model::Object* Vm::get_stack_top() {
     return stack_top;
 }
 
-void Vm::throw_error (
-    err::PositionInfo& pos,
-    err::ErrorInfo& err
-) {
+void Vm::throw_error (err::ErrorInfo& err) {
     deps::HashMap positions {};
     std::string path;
     for (auto* frame : call_stack_) {
