@@ -61,7 +61,7 @@ void Repl::eval_and_print(const std::string& cmd) {
     kiz::Parser parser(file_path);
     kiz::IRGenerator ir_gen(file_path);
 
-    const auto tokens = lexer.tokenize(cmd);
+    const auto tokens = lexer.tokenize(cmd, get_history().size());
     auto ast = parser.parse(tokens);
     if (!ast->statements.empty() and
         dynamic_cast<kiz::ExprStmt*>(ast->statements.back().get())

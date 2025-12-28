@@ -64,7 +64,7 @@ class Lexer {
     const std::string& file_path;
 public:
     explicit Lexer(const std::string& file_path) : file_path(file_path) {}
-    std::vector<Token> tokenize(const std::string& src);
+    std::vector<Token> tokenize(const std::string& src, size_t lineno_start=1);
 };
 
 }  // namespace kiz

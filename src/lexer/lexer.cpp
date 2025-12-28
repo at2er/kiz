@@ -45,10 +45,10 @@ void register_keywords() {
     keywords_registered = true;
 }
 
-std::vector<Token> Lexer::tokenize(const std::string& src) {
+std::vector<Token> Lexer::tokenize(const std::string& src, size_t lineno_start) {
     std::vector<Token> tokens;
     size_t pos = 0;
-    size_t lineno = 1;
+    size_t lineno = lineno_start;
     size_t col = 1;
     register_keywords();
     DEBUG_OUTPUT("tokenize the src txt...");
