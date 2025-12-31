@@ -180,6 +180,15 @@ std::unique_ptr<Statement> Parser::parse_stmt() {
         skip_end_of_ln();
         return std::make_unique<NonlocalAssignStmt>(tok.pos, name, std::move(expr));
     }
+    
+    // 解析throw语句
+    if (curr_tok.type == TokenType::Throw) {
+        DEBUG_OUTPUT("parsing throw");
+        auto tok = skip_token("throw");
+        std::unique_ptr<Expression> expr = parse_expression();
+        skip_end_of_ln();
+        return std::make_unique<ThrowStmt>(tok.pos, std::move(expr));
+    }
 
     // 解析global语句
     if (curr_tok.type == TokenType::Global) {
