@@ -5,6 +5,6 @@ end
 
 try
     a()
-catch e: int
+catch e: Error
     print(e.__name__, e.__info__)
 end
