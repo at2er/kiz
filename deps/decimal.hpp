@@ -262,13 +262,37 @@ public:
     }
 
     /// 除法（无限精度，若除不尽则尾数会无限长，此处使用BigInt除法保证精度）
-    Decimal operator/(const Decimal& other) const {
-        assert(!(other.mantissa_ == BigInt(0)) && "Decimal division by zero");
-        BigInt div_mant = mantissa_ * BigInt::fast_pow_unsigned(BigInt(10), BigInt(-other.exponent_));
-        div_mant = div_mant / other.mantissa_;
-        Decimal res(div_mant);
-        res.exponent_ = exponent_ + other.exponent_; // 注意：这里是 +，因为分母的指数是负的
+    /**
+     * @brief 除法：保留小数点后n位，除不尽时截断
+     * @param other 除数
+     * @param n 保留小数位数（n≥0，n=0时取整）
+     * @return 保留n位小数的Decimal结果
+     * @throw KizStopRunningSignal 除数为0时抛出
+     */
+    Decimal div(const Decimal& other, int n) const {
+        // 检查除数为0，抛自定义异常
+        if (other.mantissa_ == BigInt(0)) {
+            throw KizStopRunningSignal();
+        }
+        // 检查n的合法性（非负）
+        assert(n >= 0 && "n must be non-negative");
+
+        BigInt a_mant, b_mant;
+        int exp = align_exponent(*this, other, a_mant, b_mant);
+
+        // 补零扩展被除数：乘以 10^n，用于保留n位小数
+        BigInt ten(10);
+        BigInt scale = BigInt::fast_pow_unsigned(ten, BigInt(n));
+        BigInt dividend = a_mant * scale;
+
+        // 整数除法（截断余数）
+        BigInt quotient = dividend / b_mant;
+
+        // 计算结果的指数：exp（对齐后的指数） - n（补零的位数）
+        Decimal res(quotient);
+        res.exponent_ = exp - n;
         res.normalize();
+
         return res;
     }
 
