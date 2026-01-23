@@ -13,7 +13,7 @@ object Point
     end
 
     fn to_string(this)
-        return "Point(x=" + str(c.x) + ", y=" + str(c.y) +")"
+        return "Point(x=" + Str(c.x) + ", y=" + Str(c.y) +")"
     end
 
 end

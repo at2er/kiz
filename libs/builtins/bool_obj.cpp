@@ -1,4 +1,4 @@
-#include "models.hpp"
+#include "../../src/models/models.hpp"
 #include "include/builtin_functions.hpp"
 
 namespace model {
@@ -7,7 +7,7 @@ namespace model {
 model::Object* bool_call(model::Object* self, const model::List* args) {
     const auto a = builtin::get_one_arg(args);
     return new model::Bool(
-        kiz::Vm::check_obj_is_true(a)
+        kiz::Vm::is_true(a)
     );
 }
 

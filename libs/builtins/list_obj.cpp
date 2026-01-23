@@ -1,4 +1,4 @@
-#include "models.hpp"
+#include "../../src/models/models.hpp"
 
 namespace model {
 
@@ -80,7 +80,7 @@ model::Object* list_eq(model::Object* self, const model::List* args) {
         assert(elem_eq_method != nullptr && "Element must implement __eq__ method");
         
         // 调用 __eq__
-        kiz::Vm::call_function(
+        kiz::Vm::call(
             elem_eq_method, new List({another_elem}), self_elem
         );
         const auto eq_result = kiz::Vm::get_return_val();
@@ -114,13 +114,13 @@ model::Object* list_contains(model::Object* self, const model::List* args) {
     for (Object* elem : self_list->val) {
         const auto elem_eq_method = kiz::Vm::get_attr(elem, "__eq__");
 
-        kiz::Vm::call_function(
+        kiz::Vm::call(
             elem_eq_method, new List({target_elem}), elem
         );
         const auto result = kiz::Vm::get_return_val();
 
         // 找到匹配元素，立即返回true
-        if (kiz::Vm::check_obj_is_true(result)) return new Bool(true);
+        if (kiz::Vm::is_true(result)) return new Bool(true);
     }
     
     // 遍历完未找到匹配元素，返回false

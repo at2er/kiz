@@ -15,10 +15,10 @@
 #include <cctype>
 #include <algorithm>
 
-#include "ir_gen.hpp"
-#include "lexer.hpp"
-#include "parser.hpp"
-#include "vm.hpp"
+#include "../ir_gen/ir_gen.hpp"
+#include "../lexer/lexer.hpp"
+#include "../parser/parser.hpp"
+#include "../vm/vm.hpp"
 
 namespace ui {
 

@@ -1,5 +1,5 @@
-#include "models.hpp"
-#include "vm.hpp"
+#include "../../src/models/models.hpp"
+#include "../../src/vm/vm.hpp"
 #include "include/builtin_functions.hpp"
 
 namespace model {
@@ -9,7 +9,7 @@ model::Object* int_call(model::Object* self, const model::List* args) {
     auto a = builtin::get_one_arg(args);
     dep::BigInt val(0);
     if (auto s = dynamic_cast<String*>(a)) val = dep::BigInt(s->val);
-    else if (!kiz::Vm::check_obj_is_true(a)) val = dep::BigInt(0);
+    else if (!kiz::Vm::is_true(a)) val = dep::BigInt(0);
     return new model::Int(val);
 }
 

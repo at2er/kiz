@@ -1,12 +1,12 @@
 
 #include <cassert>
 
-#include "models.hpp"
+#include "../models/models.hpp"
 #include "vm.hpp"
 
 namespace kiz {
 
-bool Vm::check_obj_is_true(model::Object* obj) {
+bool Vm::is_true(model::Object* obj) {
     if (const auto bool_obj = dynamic_cast<const model::Bool*>(obj)) {
         return bool_obj->val==true;
     }
@@ -14,13 +14,13 @@ bool Vm::check_obj_is_true(model::Object* obj) {
         return false;
     }
 
-    call_function(get_attr(obj, "__bool__"), new model::List({}), obj);
+    call(get_attr(obj, "__bool__"), new model::List({}), obj);
     auto result = get_return_val();
-    return check_obj_is_true(result);
+    return is_true(result);
 }
 
 
-void Vm::call_function(model::Object* func_obj, model::Object* args_obj, model::Object* self=nullptr){
+void Vm::call(model::Object* func_obj, model::Object* args_obj, model::Object* self=nullptr){
     assert(func_obj != nullptr);
     assert(args_obj != nullptr);
     auto* args_list = dynamic_cast<model::List*>(args_obj);
@@ -31,11 +31,11 @@ void Vm::call_function(model::Object* func_obj, model::Object* args_obj, model::
     }
     DEBUG_OUTPUT("start to call function");
 
-    // 分类型处理函数调用（Function / CppFunction）
-    if (const auto* cpp_func = dynamic_cast<model::CppFunction*>(func_obj)) {
-        // -------------------------- 处理 CppFunction 调用 --------------------------
-        DEBUG_OUTPUT("start to call CppFunction");
-        DEBUG_OUTPUT("call CppFunction"
+    // 分类型处理函数调用（Function / NativeFunction）
+    if (const auto* cpp_func = dynamic_cast<model::NativeFunction*>(func_obj)) {
+        // -------------------------- 处理 NativeFunction 调用 --------------------------
+        DEBUG_OUTPUT("start to call NativeFunction");
+        DEBUG_OUTPUT("call NativeFunction"
             + cpp_func->to_string()
             + "(self=" + (self ? self->to_string() : "nullptr")
             + ", "+ args_obj->to_string() + ")"
@@ -43,7 +43,7 @@ void Vm::call_function(model::Object* func_obj, model::Object* args_obj, model::
 
         model::Object* return_val = cpp_func->func(self, args_list);
 
-        DEBUG_OUTPUT("success to get the result of CppFunction");
+        DEBUG_OUTPUT("success to get the result of NativeFunction");
 
         // 管理返回值引用计数：返回值压栈前必须 make_ref
         if (return_val != nullptr) {
@@ -57,8 +57,8 @@ void Vm::call_function(model::Object* func_obj, model::Object* args_obj, model::
         // 返回值压入操作数栈
         op_stack.push(return_val);
 
-        DEBUG_OUTPUT("ok to call CppFunction...");
-        DEBUG_OUTPUT("CppFunction return: " + return_val->to_string());
+        DEBUG_OUTPUT("ok to call NativeFunction...");
+        DEBUG_OUTPUT("NativeFunction return: " + return_val->to_string());
     } else if (auto* func = dynamic_cast<model::Function*>(func_obj)) {
         // -------------------------- 处理 Function 调用 --------------------------
         DEBUG_OUTPUT("call Function: " + func->name);
@@ -126,7 +126,7 @@ void Vm::call_function(model::Object* func_obj, model::Object* args_obj, model::
     // 处理对象魔术方法__call__
     } else if (const auto callable_it = func_obj->attrs.find("__call__")) {
         DEBUG_OUTPUT("call callable obj");
-        call_function(callable_it->value, args_obj, func_obj);
+        call(callable_it->value, args_obj, func_obj);
     } else {
         assert(false && "CALL: 栈顶元素非Function/CppFunction类型");
     }
@@ -155,7 +155,7 @@ void Vm::exec_CALL(const Instruction& instruction) {
 
     DEBUG_OUTPUT("弹出函数对象: " + func_obj->to_string());
     DEBUG_OUTPUT("弹出参数列表: " + args_obj->to_string());
-    call_function(func_obj, args_obj);
+    call(func_obj, args_obj);
 
 }
 
@@ -186,7 +186,7 @@ void Vm::exec_CALL_METHOD(const Instruction& instruction) {
     func_obj->make_ref();
 
     DEBUG_OUTPUT("获取函数对象: " + func_obj->to_string());
-    call_function(func_obj, args_obj, obj);
+    call(func_obj, args_obj, obj);
 
 }
 

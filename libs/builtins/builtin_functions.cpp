@@ -3,7 +3,7 @@
 #include <chrono>
 #include <cstdint>
 
-#include "models.hpp"
+#include "../../src/models/models.hpp"
 
 namespace builtin {
 
@@ -14,7 +14,7 @@ model::Object* print(model::Object* self, const model::List* args) {
     }
     std::cout << text << std::endl;
     return new model::Nil();
-};
+}
 
 model::Object* input(model::Object* self, const model::List* args) {
     const auto prompt_obj = get_one_arg(args);
@@ -22,7 +22,7 @@ model::Object* input(model::Object* self, const model::List* args) {
     std::string result;
     std::getline(std::cin, result);
     return new model::String(result);
-};
+}
 
 model::Object* isinstance(model::Object* self, const model::List* args) {
     if (!(args->val.size() == 2)) {
@@ -33,12 +33,12 @@ model::Object* isinstance(model::Object* self, const model::List* args) {
     const auto b = args->val[1];
     return check_based_object(a, b);
     
-};
+}
 
 model::Object* help(model::Object* self, const model::List* args) {
     // todo
     return new model::Nil();
-};
+}
 
 model::Object* breakpoint(model::Object* self, const model::List* args) {
     size_t i = 0;
@@ -84,49 +84,44 @@ model::Object* breakpoint(model::Object* self, const model::List* args) {
         return new model::Nil();
     }
     throw KizStopRunningSignal();
-};
+}
 
 model::Object* range(model::Object* self, const model::List* args) {
     // todo
     return new model::Nil();
-};
+}
 
 model::Object* cmd(model::Object* self, const model::List* args) {
     // todo
     return new model::Nil();
-};
+}
 
 model::Object* now(model::Object* self, const model::List* args) {
     using namespace std::chrono;
     auto now = high_resolution_clock::now().time_since_epoch();
     int64_t time = duration_cast<nanoseconds>(now).count();
     return new model::Int( dep::BigInt(std::to_string(time)) );
-};
+}
 
 model::Object* setattr(model::Object* self, const model::List* args) {
     // todo
     return new model::Nil();
-};
+}
 
 model::Object* getattr(model::Object* self, const model::List* args) {
     // todo
     return new model::Nil();
-};
+}
 
 model::Object* delattr(model::Object* self, const model::List* args) {
     // todo
     return new model::Nil();
-};
+}
 
 model::Object* get_refc(model::Object* self, const model::List* args) {
     const auto obj = get_one_arg(args);
     return new model::Int( dep::BigInt(obj->get_refc_()) );
-};
-
-model::Object* copy(model::Object* self, const model::List* args) {
-    // todo
-    return new model::Nil();
-};
+}
 
 model::Object* create(model::Object* self, const model::List* args) {
     if (args->val.empty()) {
@@ -137,11 +132,11 @@ model::Object* create(model::Object* self, const model::List* args) {
     new_obj->attrs.insert("__parent__", obj);
     return new_obj;
 
-};
+}
 
-model::Object* typeofobj(model::Object* self, const model::List* args) {
+model::Object* type_of_obj(model::Object* self, const model::List* args) {
     // todo
     return new model::Nil();
-};
+}
 
 }

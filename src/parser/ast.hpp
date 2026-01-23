@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "error/error_reporter.hpp"
+#include "../error/error_reporter.hpp"
 
 namespace kiz {
 

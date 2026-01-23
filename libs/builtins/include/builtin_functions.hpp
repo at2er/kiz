@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_set>
 
-#include "models.hpp"
+#include "../../../src/models/models.hpp"
 
 namespace builtin {
 
@@ -53,7 +53,7 @@ model::Object* delattr(model::Object* self, const model::List* args);
 model::Object* get_refc(model::Object* self, const model::List* args);
 model::Object* copy(model::Object* self, const model::List* args);
 model::Object* create(model::Object* self, const model::List* args);
-model::Object* typeofobj(model::Object* self, const model::List* args);
+model::Object* type_of_obj(model::Object* self, const model::List* args);
 
 
 }

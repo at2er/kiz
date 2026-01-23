@@ -4,31 +4,58 @@ project(kiz
         VERSION 0.2.1
         LANGUAGES CXX)
 
+# ===================== 基础配置 =====================
 # 设置C++标准
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# 版本号定义
 set(KIZ_VERSION_MAJOR 0)
-set(KIZ_VERSION_MINOR 2)
-set(KIZ_VERSION_PATCH 1)
+set(KIZ_VERSION_MINOR 3)
+set(KIZ_VERSION_PATCH 0)
 set(KIZ_VERSION "${KIZ_VERSION_MAJOR}.${KIZ_VERSION_MINOR}.${KIZ_VERSION_PATCH}")
 
-# 配置模板文件（生成到构建目录的include下）
+# 配置版本头文件（生成到构建目录）
+# 注意：如果 version.hpp.in 实际在 include/ 下，改为 ${PROJECT_SOURCE_DIR}/include/version.hpp.in
 configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/version.hpp.in
+        ${PROJECT_SOURCE_DIR}/src/version.hpp.in  # 按你实际路径调整
         ${CMAKE_CURRENT_BINARY_DIR}/include/version.hpp
         @ONLY
 )
 
-# 收集src目录下的所有源文件
-file(GLOB_RECURSE SRC_FILES
-        "${PROJECT_SOURCE_DIR}/src/*.cpp"
+# ===================== 手动枚举所有 .cpp 文件（仅列cpp，无hpp） =====================
+set(SRC_FILES
+        # 入口文件
+        ${PROJECT_SOURCE_DIR}/src/main.cpp
+
+        # 编译器模块
+        ${PROJECT_SOURCE_DIR}/src/lexer/lexer.cpp
+        ${PROJECT_SOURCE_DIR}/src/parser/parser.cpp
+        ${PROJECT_SOURCE_DIR}/src/parser/parse_expr.cpp
+        ${PROJECT_SOURCE_DIR}/src/parser/parse_stmt.cpp
+
+        # IR 生成模块
+        ${PROJECT_SOURCE_DIR}/src/ir_gen/ir_gen.cpp
+        ${PROJECT_SOURCE_DIR}/src/ir_gen/gen_expr.cpp
+        ${PROJECT_SOURCE_DIR}/src/ir_gen/gen_stmt.cpp
+
+        # VM 核心模块
+        ${PROJECT_SOURCE_DIR}/src/vm/vm.cpp
+        ${PROJECT_SOURCE_DIR}/src/vm/exec_get_set.cpp
+        ${PROJECT_SOURCE_DIR}/src/vm/exec_calc.cpp
+        ${PROJECT_SOURCE_DIR}/src/vm/exec_call.cpp
+        ${PROJECT_SOURCE_DIR}/src/vm/exec_misc.cpp
+        ${PROJECT_SOURCE_DIR}/src/vm/registering_std_modules.cpp
+
+        # 工具模块
+        ${PROJECT_SOURCE_DIR}/src/error/error_reporter.cpp
+        ${PROJECT_SOURCE_DIR}/src/util/src_manager.cpp
+        ${PROJECT_SOURCE_DIR}/src/repl/repl.cpp
 )
 
-# ===================== 新增：添加libs/builtins下的源文件 =====================
-# 定义需要加入的builtins源文件列表
-set(BUILTINS_SRC_FILES
+# lib 模块（仅列cpp）
+set(LIB_SRC_FILES
         ${PROJECT_SOURCE_DIR}/libs/builtins/bool_obj.cpp
         ${PROJECT_SOURCE_DIR}/libs/builtins/int_obj.cpp
         ${PROJECT_SOURCE_DIR}/libs/builtins/rational_obj.cpp
@@ -36,56 +63,68 @@ set(BUILTINS_SRC_FILES
         ${PROJECT_SOURCE_DIR}/libs/builtins/str_obj.cpp
         ${PROJECT_SOURCE_DIR}/libs/builtins/list_obj.cpp
         ${PROJECT_SOURCE_DIR}/libs/builtins/dict_obj.cpp
-        ${PROJECT_SOURCE_DIR}/libs/builtins/builtin_functions.cpp # 注意：原文件名可能是builtin_functions.cpp（少打了一个l），请确认实际文件名
+        ${PROJECT_SOURCE_DIR}/libs/builtins/builtin_functions.cpp
 )
 
-# 检查builtins文件是否存在（避免编译错误）
-foreach(builtin_file ${BUILTINS_SRC_FILES})
-    if(NOT EXISTS ${builtin_file})
-        message(FATAL_ERROR "未找到builtins文件：${builtin_file}，请确认文件路径/名称正确！")
+# ===================== 文件存在性检查（仅检查cpp） =====================
+foreach(src_file ${SRC_FILES})
+    if(NOT EXISTS ${src_file})
+        message(FATAL_ERROR "【错误】未找到src目录文件：${src_file}，请检查路径/文件名是否正确！")
     endif()
 endforeach()
 
-# 合并所有源文件（src + libs/builtins）
-set(ALL_SRC_FILES ${SRC_FILES} ${BUILTINS_SRC_FILES})
-# ==============================================================================
+foreach(lib_file ${LIB_SRC_FILES})
+    if(NOT EXISTS ${lib_file})
+        message(FATAL_ERROR "【错误】未找到库文件：${lib_file}，请检查路径/文件名是否正确！")
+    endif()
+endforeach()
 
-# 检查main.cpp是否存在
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/src/main.cpp")
-    message(FATAL_ERROR "未找到入口文件：src/main.cpp，请确认文件路径正确！")
-endif()
+# 合并所有cpp文件
+set(ALL_SRC_FILES ${SRC_FILES} ${LIB_SRC_FILES})
 
-# 添加可执行目标（使用合并后的所有源文件）
+# ===================== 编译配置（核心：让编译器找到hpp） =====================
+# 仅添加cpp到可执行目标（完全符合你的需求）
 add_executable(kiz ${ALL_SRC_FILES})
 
-# 关键修改：添加构建目录的include到搜索路径
+# 关键：指定头文件搜索路径 → 编译器会在这些路径下自动找#include的hpp
 target_include_directories(kiz
         PRIVATE
-        "${PROJECT_SOURCE_DIR}/include"       # 源码的include
-        "${PROJECT_SOURCE_DIR}/deps"          # deps目录
-        "${PROJECT_SOURCE_DIR}/libs"          # libs目录（包含builtins头文件）
-        "${CMAKE_CURRENT_BINARY_DIR}/include" # 构建目录的include（生成的version.hpp在这里）
+        # src根目录
+        ${PROJECT_SOURCE_DIR}/src
+
+        # 依赖库目录
+        ${PROJECT_SOURCE_DIR}/deps
+
+        ${PROJECT_SOURCE_DIR}/libs
+
+        # 生成的version.hpp所在目录
+        ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
-# 按平台设置可执行文件后缀
+# 平台相关后缀
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
     set_target_properties(kiz PROPERTIES SUFFIX ".exe")
 else()
     set_target_properties(kiz PROPERTIES SUFFIX ".elf")
 endif()
 
-# ===================== 源文件数量统计 =====================
+# ===================== 编译信息打印 =====================
 list(LENGTH ALL_SRC_FILES TOTAL_SRC_COUNT)
 list(LENGTH SRC_FILES SRC_DIR_COUNT)
-list(LENGTH BUILTINS_SRC_FILES BUILTINS_COUNT)
+list(LENGTH LIB_SRC_FILES LIB_FILES_COUNT)
 
-# 修正打印信息
-message(STATUS "=== 项目kiz v${PROJECT_VERSION} 编译配置 ===")
-message(STATUS "源文件总数：${TOTAL_SRC_COUNT} (src目录：${SRC_DIR_COUNT} | builtins：${BUILTINS_COUNT})")
-message(STATUS "头文件搜索路径：")
-message(STATUS "  - ${PROJECT_SOURCE_DIR}/include")
-message(STATUS "  - ${PROJECT_SOURCE_DIR}/deps")
-message(STATUS "  - ${PROJECT_SOURCE_DIR}/libs")          # 补充打印libs路径
-message(STATUS "  - ${CMAKE_CURRENT_BINARY_DIR}/include") # 构建目录的include路径
-message(STATUS "目标文件：${CMAKE_BINARY_DIR}/kiz$<TARGET_FILE_SUFFIX:kiz>")
+message(STATUS "======================================")
+message(STATUS "  项目 kiz v${PROJECT_VERSION} 编译配置")
+message(STATUS "======================================")
+message(STATUS "✅ C++标准：C++20")
+message(STATUS "✅ 仅添加 .cpp 文件到编译目标，.hpp 自动查找")
+message(STATUS "✅ 源文件总数：${TOTAL_SRC_COUNT}")
+message(STATUS "  - src目录：${SRC_DIR_COUNT} 个 .cpp 文件")
+message(STATUS "  - libs：${LIB_FILES_COUNT} 个 .cpp 文件")
+message(STATUS "✅ 目标文件路径：${CMAKE_BINARY_DIR}/kiz$<TARGET_FILE_SUFFIX:kiz>")
+message(STATUS "✅ 编译器自动搜索 .hpp 的路径：")
+message(STATUS "  - ${PROJECT_SOURCE_DIR}/src")
+message(STATUS "  - ${PROJECT_SOURCE_DIR}/deps（依赖库hpp）")
+message(STATUS "  - ${PROJECT_SOURCE_DIR}/libs")
+message(STATUS "  - ${CMAKE_CURRENT_BINARY_DIR}/include（生成的version.hpp）")
 message(STATUS "======================================")

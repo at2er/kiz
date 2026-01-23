@@ -15,8 +15,8 @@
 #include <memory>
 #include <vector>
 
-#include "kiz.hpp"
-#include "repl/color.hpp"
+#include "../kiz.hpp"
+#include "../repl/color.hpp"
 
 namespace kiz {
 

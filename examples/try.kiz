@@ -5,14 +5,14 @@ end
 fn call_a()
     try
         a()
-     catch e : int # 故意使其匹配不到错误类型
+     catch e : Int # 故意使其匹配不到错误类型
           print("666")
      end
 end
 
 try
     call_a()
-catch e: str
+catch e: Str
     print("error is str")
 catch e: Error
     print(e.k) # 故意使其报错

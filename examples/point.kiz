@@ -15,4 +15,4 @@ end
 a = Point(3,5)
 b = Point(4,0)
 c = a + b
-print("Point(x=" + str(c.x) + ", y=" + str(c.y) +")")
+print("Point(x=" + Str(c.x) + ", y=" + Str(c.y) +")")

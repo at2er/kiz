@@ -6,15 +6,15 @@
  * @date 2025-10-25
  */
 
-#include "../../include/lexer.hpp"
-#include "../include/kiz.hpp"
+#include "lexer.hpp"
+#include "../kiz.hpp"
 #include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <map>
 #include <stdexcept>
 
-#include "../../include/error/error_reporter.hpp"
+#include "../error/error_reporter.hpp"
 
 namespace kiz {
 

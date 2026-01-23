@@ -1,8 +1,8 @@
-#include "kiz.hpp"
-#include "opcode.hpp"
-#include "../../include/ir_gen.hpp"
-#include "../../include/ast.hpp"
-#include "../../include/models.hpp"
+#include "../kiz.hpp"
+#include "../op_code/opcode.hpp"
+#include "ir_gen.hpp"
+#include "../parser/ast.hpp"
+#include "../models/models.hpp"
 
 namespace kiz {
 

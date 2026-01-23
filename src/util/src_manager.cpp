@@ -6,7 +6,7 @@
  * @author azhz1107cat
  */
 
-#include "util/src_manager.hpp"
+#include "src_manager.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -18,7 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "kiz.hpp"
+#include "../kiz.hpp"
 
 namespace err {
 

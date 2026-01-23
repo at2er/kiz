@@ -7,7 +7,7 @@
 
 #pragma once
 #include "ast.hpp"
-#include "lexer.hpp"
+#include "../lexer/lexer.hpp"
 
 #include <memory>
 #include <string>

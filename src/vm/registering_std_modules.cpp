@@ -1,10 +1,10 @@
-#include "../include/models.hpp"
+#include "../models/models.hpp"
 #include "../libs/math/include/math_lib.hpp"
 
-namespace model {
+namespace kiz {
 
-void registering_std_modules() {
-    std_modules.insert("math", new CppFunction(
+void Vm::entry_std_modules() {
+    std_modules.insert("math", new model::NativeFunction(
         math_lib::_init_module_
     ));
 }

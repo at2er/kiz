@@ -5,15 +5,15 @@
  * @author azhz1107cat
  */
 
-#include "../../include/error/error_reporter.hpp"
+#include "error_reporter.hpp"
 
-#include "util/src_manager.hpp"
+#include "../util/src_manager.hpp"
 
 #include <iostream>
 #include <string>
 
-#include "kiz.hpp"
-#include "repl/color.hpp"
+#include "../kiz.hpp"
+#include "../repl/color.hpp"
 
 namespace err {
 

@@ -1,4 +1,4 @@
-a=int(input(">>>"))
+a=Int(input(">>>"))
 if a==0
     print("a is 0")
 else if a==2

@@ -12,34 +12,35 @@
 #include <iomanip>
 #include <utility>
 
-#include "kiz.hpp" // 不能删 !!!
-#include "vm.hpp"
-#include "../deps/hashmap.hpp"
-#include "../deps/bigint.hpp"
-#include "../deps/rational.hpp"
+#include "../kiz.hpp"
+#include "../vm/vm.hpp"
+#include "../../deps/hashmap.hpp"
+#include "../../deps/bigint.hpp"
+#include "../../deps/rational.hpp"
 
 namespace model {
 
-namespace MagicName {
-    inline std::string Add = "__add__";
-    inline std::string Sub = "__sub__";
-    inline std::string Mul = "__mul__";
-    inline std::string Div = "__div__";
-    inline std::string Pow = "__pow__";
-    inline std::string Mod = "__mod__";
-    inline std::string Eq = "__eq__";
-    inline std::string Lt = "__lt__";
-    inline std::string Gt = "__gt__";
-    inline std::string Parent = "__parent__";
-    inline std::string Call = "__call__";
-    inline std::string Bool = "__bool__";
-    inline std::string Str = "__str__";
-    inline std::string DebugStr = "__dstr__";
-    inline std::string GetItem = "__getitem__";
-    inline std::string SetItem = "__setitem__";
-    inline std::string Contains = "__contains__";
-    inline std::string NextItem = "__next__";
-    inline std::string OwnerModule = "__owner_module__";
+namespace magic_name {
+    constexpr auto add = "__add__";
+    constexpr auto sub = "__sub__";
+    constexpr auto mul = "__mul__";
+    constexpr auto div = "__div__";
+    constexpr auto pow = "__pow__";
+    constexpr auto mod = "__mod__";
+    constexpr auto eq = "__eq__";
+    constexpr auto lt = "__lt__";
+    constexpr auto gt = "__gt__";
+
+    constexpr auto parent = "__parent__";
+    constexpr auto call = "__call__";
+    constexpr auto bool_of = "__bool__";
+    constexpr auto str = "__str__";
+    constexpr auto debug_str = "__dstr__";
+    constexpr auto getitem = "__getitem__";
+    constexpr auto setitem = "__setitem__";
+    constexpr auto contains = "__contains__";
+    constexpr auto next_item = "__next__";
+    constexpr auto owner_module = "__owner_module__";
 }
 
 // 工具函数ptr转为地址的字符串
@@ -114,6 +115,7 @@ inline auto based_rational = new Object();
 inline auto based_bool = new Object();
 inline auto based_nil = new Object();
 inline auto based_str = new Object();
+inline auto based_native_function = new Object();
 inline auto based_error = new Object();
 
 class List;
@@ -183,7 +185,7 @@ public:
     }
 };
 
-class CppFunction : public Object {
+class NativeFunction : public Object {
 public:
     std::string name;
     std::function<Object*(Object*, List*)> func;
@@ -191,9 +193,11 @@ public:
     static constexpr ObjectType TYPE = ObjectType::OT_CppFunction;
     [[nodiscard]] ObjectType get_type() const override { return TYPE; }
 
-    explicit CppFunction(std::function<Object*(Object*, List*)> func) : func(std::move(func)) {}
+    explicit NativeFunction(std::function<Object*(Object*, List*)> func) : func(std::move(func)) {
+        attrs.insert("__parent__", based_native_function);
+    }
     [[nodiscard]] std::string to_string() const override {
-    return "<CppFunction" + 
+    return "<NativeFunction" +
            (name.empty() 
             ? "" 
             : ": name='" + name + "'"
@@ -357,9 +361,5 @@ public:
         attrs.insert("__parent__", based_error);
     }
 };
-
-inline dep::HashMap<Object*> std_modules;
-
-void registering_std_modules();
 
 };

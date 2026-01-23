@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-#include "kiz.hpp"
+#include "../kiz.hpp"
 
 
 namespace kiz {

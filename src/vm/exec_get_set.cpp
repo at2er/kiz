@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include "models.hpp"
+#include "../models/models.hpp"
 #include "vm.hpp"
 
 namespace kiz {

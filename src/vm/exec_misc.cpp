@@ -1,7 +1,7 @@
 
 #include <cassert>
 
-#include "models.hpp"
+#include "../models/models.hpp"
 #include "vm.hpp"
 #include "builtins/include/builtin_functions.hpp"
 
@@ -106,7 +106,7 @@ void Vm::exec_JUMP_IF_FALSE(const Instruction& instruction) {
     op_stack.pop();
     const size_t target_pc = instruction.opn_list[0];
 
-    bool need_jump = check_obj_is_true(cond) ? false: true;
+    bool need_jump = is_true(cond) ? false: true;
 
     if (need_jump) {
         // 跳转逻辑
@@ -127,7 +127,7 @@ void Vm::exec_THROW(const Instruction& instruction) {
     DEBUG_OUTPUT("exec throw...");
     auto* top = dynamic_cast<model::Error*>(op_stack.top());
     assert(top != nullptr);
-    top->positions = gen_positions();
+    top->positions = gen_pos_info();
     curr_error = top;
     op_stack.pop();
 

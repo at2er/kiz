@@ -7,8 +7,8 @@
  */
 
 #pragma once
-#include "ast.hpp"
-#include "models.hpp"
+#include "../parser/ast.hpp"
+#include "../models/models.hpp"
 
 #include <memory>
 #include <stack>

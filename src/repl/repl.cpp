@@ -6,15 +6,15 @@
  * @date 2025-10-25
  */
 
-#include "repl/repl.hpp"
+#include "repl.hpp"
 
-#include "lexer.hpp"
-#include "vm.hpp"
-#include "ir_gen.hpp"
-#include "parser.hpp"
-#include "kiz.hpp"
-#include "repl/color.hpp"
-#include "util/src_manager.hpp"
+#include "../lexer/lexer.hpp"
+#include "../vm/vm.hpp"
+#include "../ir_gen/ir_gen.hpp"
+#include "../parser/parser.hpp"
+#include "../kiz.hpp"
+#include "color.hpp"
+#include "../util/src_manager.hpp"
 
 namespace ui {
 
@@ -64,16 +64,16 @@ void Repl::eval_and_print(const std::string& cmd) {
     )   should_print = true;
 
     const auto ir = ir_gen.gen(std::move(ast));
-    if (cmd_history_.size() < 2) {
+    if (vm_.call_stack.empty()) {
         const auto module = kiz::IRGenerator::gen_mod(file_path, ir);
         vm_.set_main_module(module);
     } else {
         assert(ir != nullptr && "No ir for run" );
-        vm_.set_curr_code(ir);
+        vm_.set_and_exec_curr_code(ir);
     }
 
     DEBUG_OUTPUT("repl print");
-    auto stack_top = vm_.get_stack_top();
+    auto stack_top = vm_.fetch_one_from_stack_top();
     if (stack_top != nullptr) {
         if (not dynamic_cast<model::Nil*>(stack_top) and should_print) {
             std::cout << stack_top->to_string() << std::endl;

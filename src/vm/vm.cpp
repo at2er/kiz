@@ -8,13 +8,13 @@
 
 #include "vm.hpp"
 
-#include "models.hpp"
-#include "opcode.hpp"
+#include "../models/models.hpp"
+#include "../op_code/opcode.hpp"
 
 #include <algorithm>
 #include <cassert>
 
-#include "kiz.hpp"
+#include "../kiz.hpp"
 
 #include "../libs/builtins/include/builtin_methods.hpp"
 #include "../libs/builtins/include/builtin_functions.hpp"
@@ -29,6 +29,8 @@ std::vector<std::shared_ptr<CallFrame>> Vm::call_stack{};
 bool Vm::running = false;
 std::string Vm::file_path;
 model::Error* Vm::curr_error {};
+dep::HashMap<model::Object*> Vm::std_modules {};
+
 
 std::pair<std::string, std::string> get_err_name_and_msg(const model::Object* err_obj) {
     assert(err_obj != nullptr);
@@ -44,16 +46,24 @@ std::pair<std::string, std::string> get_err_name_and_msg(const model::Object* er
 Vm::Vm(const std::string& file_path_) {
     file_path = file_path_;
     DEBUG_OUTPUT("registering builtin functions...");
-    builtins.insert("print", new model::CppFunction(builtin::print));
-    builtins.insert("input", new model::CppFunction(builtin::input));
-    builtins.insert("isinstance", new model::CppFunction(builtin::isinstance));
-    builtins.insert("create", new model::CppFunction(builtin::create));
-    builtins.insert("now", new model::CppFunction(builtin::now));
-    builtins.insert("get_refc", new model::CppFunction(builtin::get_refc));
-    builtins.insert("breakpoint", new model::CppFunction(builtin::breakpoint));
+    builtins.insert("print", new model::NativeFunction(builtin::print));
+    builtins.insert("input", new model::NativeFunction(builtin::input));
+    builtins.insert("isinstance", new model::NativeFunction(builtin::isinstance));
+    builtins.insert("create", new model::NativeFunction(builtin::create));
+    builtins.insert("now", new model::NativeFunction(builtin::now));
+    builtins.insert("get_refc", new model::NativeFunction(builtin::get_refc));
+    builtins.insert("breakpoint", new model::NativeFunction(builtin::breakpoint));
+    builtins.insert("cmd", new model::NativeFunction(builtin::cmd));
+    builtins.insert("help", new model::NativeFunction(builtin::help));
+    builtins.insert("delattr", new model::NativeFunction(builtin::delattr));
+    builtins.insert("setattr", new model::NativeFunction(builtin::setattr));
+    builtins.insert("getattr", new model::NativeFunction(builtin::getattr));
+    builtins.insert("range", new model::NativeFunction(builtin::range));
+    builtins.insert("typeof", new model::NativeFunction(builtin::type_of_obj));
+
 
     DEBUG_OUTPUT("registering builtin objects...");
-    builtins.insert("obj", model::based_obj);
+    builtins.insert("Object", model::based_obj);
 
     model::based_bool->attrs.insert("__parent__", model::based_obj);
     model::based_int->attrs.insert("__parent__", model::based_obj);
@@ -67,22 +77,22 @@ Vm::Vm(const std::string& file_path_) {
     DEBUG_OUTPUT("registering magic methods...");
 
     // Object 基类 __eq__
-    model::based_obj->attrs.insert("__eq__", new model::CppFunction([](const model::Object* self, const model::List* args) -> model::Object* {
+    model::based_obj->attrs.insert("__eq__", new model::NativeFunction([](const model::Object* self, const model::List* args) -> model::Object* {
         const auto other_obj = builtin::get_one_arg(args);
         return new model::Bool(self == other_obj);
     }));
-    model::based_obj->attrs.insert("__str__", new model::CppFunction([](const model::Object* self, const model::List* args) -> model::Object* {
+    model::based_obj->attrs.insert("__str__", new model::NativeFunction([](const model::Object* self, const model::List* args) -> model::Object* {
         return new model::String(self->to_string());
     }));
 
-    model::based_obj->attrs.insert("__getitem__", new model::CppFunction([](const model::Object* self, const model::List* args) -> model::Object* {
+    model::based_obj->attrs.insert("__getitem__", new model::NativeFunction([](const model::Object* self, const model::List* args) -> model::Object* {
         auto attr = builtin::get_one_arg(args);
         auto attr_str = dynamic_cast<model::String*>(attr);
         assert(attr_str != nullptr);
         return get_attr(self, attr_str->val);
     }));
 
-    model::based_obj->attrs.insert("__setitem__", new model::CppFunction([](model::Object* self, model::List* args) -> model::Object* {
+    model::based_obj->attrs.insert("__setitem__", new model::NativeFunction([](model::Object* self, model::List* args) -> model::Object* {
         assert(args->val.size() == 2);
         auto attr = args->val[0];
         auto attr_str = dynamic_cast<model::String*>(attr);
@@ -92,57 +102,57 @@ Vm::Vm(const std::string& file_path_) {
     }));
 
     // Bool 类型魔法方法
-    model::based_bool->attrs.insert("__eq__", new model::CppFunction(model::bool_eq));
-    model::based_bool->attrs.insert("__call__", new model::CppFunction(model::bool_call));
+    model::based_bool->attrs.insert("__eq__", new model::NativeFunction(model::bool_eq));
+    model::based_bool->attrs.insert("__call__", new model::NativeFunction(model::bool_call));
 
     // Nil 类型魔法方法
-    model::based_nil->attrs.insert("__eq__", new model::CppFunction(model::nil_eq));
+    model::based_nil->attrs.insert("__eq__", new model::NativeFunction(model::nil_eq));
 
     // Int 类型魔法方法
-    model::based_int->attrs.insert("__add__", new model::CppFunction(model::int_add));
-    model::based_int->attrs.insert("__sub__", new model::CppFunction(model::int_sub));
-    model::based_int->attrs.insert("__mul__", new model::CppFunction(model::int_mul));
-    model::based_int->attrs.insert("__div__", new model::CppFunction(model::int_div));
-    model::based_int->attrs.insert("__mod__", new model::CppFunction(model::int_mod));
-    model::based_int->attrs.insert("__pow__", new model::CppFunction(model::int_pow));
-    model::based_int->attrs.insert("__gt__", new model::CppFunction(model::int_gt));
-    model::based_int->attrs.insert("__lt__", new model::CppFunction(model::int_lt));
-    model::based_int->attrs.insert("__eq__", new model::CppFunction(model::int_eq));
-    model::based_int->attrs.insert("__call__", new model::CppFunction(model::int_call));
-    model::based_int->attrs.insert("__bool__", new model::CppFunction(model::int_bool));
+    model::based_int->attrs.insert("__add__", new model::NativeFunction(model::int_add));
+    model::based_int->attrs.insert("__sub__", new model::NativeFunction(model::int_sub));
+    model::based_int->attrs.insert("__mul__", new model::NativeFunction(model::int_mul));
+    model::based_int->attrs.insert("__div__", new model::NativeFunction(model::int_div));
+    model::based_int->attrs.insert("__mod__", new model::NativeFunction(model::int_mod));
+    model::based_int->attrs.insert("__pow__", new model::NativeFunction(model::int_pow));
+    model::based_int->attrs.insert("__gt__", new model::NativeFunction(model::int_gt));
+    model::based_int->attrs.insert("__lt__", new model::NativeFunction(model::int_lt));
+    model::based_int->attrs.insert("__eq__", new model::NativeFunction(model::int_eq));
+    model::based_int->attrs.insert("__call__", new model::NativeFunction(model::int_call));
+    model::based_int->attrs.insert("__bool__", new model::NativeFunction(model::int_bool));
 
     // Rational 类型魔法方法
-    model::based_rational->attrs.insert("__add__", new model::CppFunction(model::rational_add));
-    model::based_rational->attrs.insert("__sub__", new model::CppFunction(model::rational_sub));
-    model::based_rational->attrs.insert("__mul__", new model::CppFunction(model::rational_mul));
-    model::based_rational->attrs.insert("__div__", new model::CppFunction(model::rational_div));
-    model::based_rational->attrs.insert("__gt__", new model::CppFunction(model::rational_gt));
-    model::based_rational->attrs.insert("__lt__", new model::CppFunction(model::rational_lt));
-    model::based_rational->attrs.insert("__eq__", new model::CppFunction(model::rational_eq));
+    model::based_rational->attrs.insert("__add__", new model::NativeFunction(model::rational_add));
+    model::based_rational->attrs.insert("__sub__", new model::NativeFunction(model::rational_sub));
+    model::based_rational->attrs.insert("__mul__", new model::NativeFunction(model::rational_mul));
+    model::based_rational->attrs.insert("__div__", new model::NativeFunction(model::rational_div));
+    model::based_rational->attrs.insert("__gt__", new model::NativeFunction(model::rational_gt));
+    model::based_rational->attrs.insert("__lt__", new model::NativeFunction(model::rational_lt));
+    model::based_rational->attrs.insert("__eq__", new model::NativeFunction(model::rational_eq));
 
     // Dictionary 类型魔法方法
-    model::based_dict->attrs.insert("__add__", new model::CppFunction(model::dict_add));
-    model::based_dict->attrs.insert("__contains__", new model::CppFunction(model::dict_contains));
+    model::based_dict->attrs.insert("__add__", new model::NativeFunction(model::dict_add));
+    model::based_dict->attrs.insert("__contains__", new model::NativeFunction(model::dict_contains));
 
     // List 类型魔法方法
-    model::based_list->attrs.insert("__add__", new model::CppFunction(model::list_add));
-    model::based_list->attrs.insert("__mul__", new model::CppFunction(model::list_mul));
-    model::based_list->attrs.insert("__eq__", new model::CppFunction(model::list_eq));
-    model::based_list->attrs.insert("__call__", new model::CppFunction(model::list_call));
-    model::based_list->attrs.insert("__bool__", new model::CppFunction(model::list_bool));
-    model::based_list->attrs.insert("__next__", new model::CppFunction(model::list_next));
-    model::based_list->attrs.insert("append", new model::CppFunction(model::list_append));
-    model::based_list->attrs.insert("contains", new model::CppFunction(model::list_contains));
-    
-    // String 类型魔法方法
-    model::based_str->attrs.insert("__add__", new model::CppFunction(model::str_add));
-    model::based_str->attrs.insert("__mul__", new model::CppFunction(model::str_mul));
-    model::based_str->attrs.insert("__eq__", new model::CppFunction(model::str_eq));
-    model::based_str->attrs.insert("__call__", new model::CppFunction(model::str_call));
-    model::based_str->attrs.insert("__bool__", new model::CppFunction(model::str_bool));
-    model::based_str->attrs.insert("contains", new model::CppFunction(model::str_contains));
+    model::based_list->attrs.insert("__add__", new model::NativeFunction(model::list_add));
+    model::based_list->attrs.insert("__mul__", new model::NativeFunction(model::list_mul));
+    model::based_list->attrs.insert("__eq__", new model::NativeFunction(model::list_eq));
+    model::based_list->attrs.insert("__call__", new model::NativeFunction(model::list_call));
+    model::based_list->attrs.insert("__bool__", new model::NativeFunction(model::list_bool));
+    model::based_list->attrs.insert("__next__", new model::NativeFunction(model::list_next));
+    model::based_list->attrs.insert("append", new model::NativeFunction(model::list_append));
+    model::based_list->attrs.insert("contains", new model::NativeFunction(model::list_contains));
 
-    model::based_error->attrs.insert("__call__", new model::CppFunction([](model::Object* self, model::List* args) -> model::Object* {   assert( args->val.size() == 2);
+    // String 类型魔法方法
+    model::based_str->attrs.insert("__add__", new model::NativeFunction(model::str_add));
+    model::based_str->attrs.insert("__mul__", new model::NativeFunction(model::str_mul));
+    model::based_str->attrs.insert("__eq__", new model::NativeFunction(model::str_eq));
+    model::based_str->attrs.insert("__call__", new model::NativeFunction(model::str_call));
+    model::based_str->attrs.insert("__bool__", new model::NativeFunction(model::str_bool));
+    model::based_str->attrs.insert("contains", new model::NativeFunction(model::str_contains));
+
+    model::based_error->attrs.insert("__call__", new model::NativeFunction([](model::Object* self, model::List* args) -> model::Object* {   assert( args->val.size() == 2);
         auto err_name = args->val[0];
         auto err_msg = args->val[1];
 
@@ -152,14 +162,15 @@ Vm::Vm(const std::string& file_path_) {
         return err;
     }));
 
-    builtins.insert("int", model::based_int);
-    builtins.insert("bool", model::based_bool);
-    builtins.insert("rational", model::based_rational);
-    builtins.insert("list", model::based_list);
-    builtins.insert("dict", model::based_dict);
-    builtins.insert("str", model::based_str);
-    builtins.insert("function", model::based_function);
-    builtins.insert("nil", model::based_nil);
+    builtins.insert("Int", model::based_int);
+    builtins.insert("Bool", model::based_bool);
+    builtins.insert("__Rational", model::based_rational);
+    builtins.insert("List", model::based_list);
+    builtins.insert("Dict", model::based_dict);
+    builtins.insert("Str", model::based_str);
+    builtins.insert("Func", model::based_function);
+    builtins.insert("NFunc", model::based_native_function);
+    builtins.insert("__Nil", model::based_nil);
     builtins.insert("Error", model::based_error);
     DEBUG_OUTPUT("current builtins: " + builtins.to_string());
 }
@@ -243,19 +254,17 @@ CallFrame* Vm::fetch_curr_call_frame() {
 }
 
 model::Object* Vm::fetch_one_from_stack_top() {
-    if ( !op_stack.empty() ) {
-        return op_stack.top();
-    }
-    assert(false);
+    const auto stack_top = op_stack.empty() ? nullptr : op_stack.top();
+    return stack_top;
 }
 
-void Vm::set_curr_code(const model::CodeObject* code_object) {
-    DEBUG_OUTPUT("execute_instruction set_curr_code (覆盖模式)...");
+void Vm::set_and_exec_curr_code(const model::CodeObject* code_object) {
+    DEBUG_OUTPUT("execute_instruction set_and_exec_curr_code (覆盖模式)...");
     DEBUG_OUTPUT("call stack length: " + std::to_string(call_stack.size()));
 
     // 合法性校验
-    assert(code_object != nullptr && "Vm::set_curr_code: 传入的 code_object 不能为 nullptr");
-    assert(!call_stack.empty() && "Vm::set_curr_code: 调用栈为空，需先通过 set_main_module() 加载模块");
+    assert(code_object != nullptr && "Vm::set_and_exec_curr_code: 传入的 code_object 不能为 nullptr");
+    assert(!call_stack.empty() && "Vm::set_and_exec_curr_code: 调用栈为空，需先通过 set_main_module() 加载模块");
 
     // 获取全局模块级调用帧（REPL 共享同一个帧）
     auto& curr_frame = *call_stack.back();
@@ -268,24 +277,19 @@ void Vm::set_curr_code(const model::CodeObject* code_object) {
 
     // ========== 覆盖：指令 ==========
     curr_frame.code_object->code = code_object->code;
-    DEBUG_OUTPUT("set_curr_code: 追加指令 ");
+    DEBUG_OUTPUT("set_and_exec_curr_code: 追加指令 ");
 
     // ========== 执行指令 ==========
     curr_frame.pc = 0;
     exec_curr_code();
-    DEBUG_OUTPUT("set_curr_code: 执行新指令完成");
+    DEBUG_OUTPUT("set_and_exec_curr_code: 执行新指令完成");
 }
 
 void Vm::load_required_modules(const dep::HashMap<model::Module*>& modules) {
     loaded_modules = modules;
 }
 
-model::Object* Vm::get_stack_top() {
-    auto stack_top = op_stack.empty() ? nullptr : op_stack.top();
-    return stack_top;
-}
-
-std::vector<std::pair<std::string, err::PositionInfo>> Vm::gen_positions() {
+auto Vm::gen_pos_info() -> std::vector<std::pair<std::string, err::PositionInfo>> {
     size_t i = 0;
     std::vector<std::pair<std::string, err::PositionInfo>> positions;
     std::string path;
@@ -310,7 +314,7 @@ void Vm::instruction_throw(const std::string& name, const std::string& content) 
     const auto err_msg = new model::String(content);
 
     const auto err_obj = new model::Error();
-    err_obj->positions = gen_positions();
+    err_obj->positions = gen_pos_info();
     err_obj->attrs.insert("__name__", err_name);
     err_obj->attrs.insert("__msg__", err_msg);
     DEBUG_OUTPUT("err_obj pos size = "+std::to_string(err_obj->positions.size()));

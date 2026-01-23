@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 #include <utility>
-#include "error/error_reporter.hpp"
+#include "../error/error_reporter.hpp"
 #include <cstddef>
 #include <unordered_map>
 

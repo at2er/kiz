@@ -9,14 +9,14 @@
 
 #include <cassert>
 
-#include "../deps/hashmap.hpp"
+#include "../../deps/hashmap.hpp"
 
 #include <stack>
 #include <tuple>
 #include <utility>
 
-#include "kiz.hpp"
-#include "error/error_reporter.hpp"
+#include "../kiz.hpp"
+#include "../error/error_reporter.hpp"
 
 namespace model {
 class Error;
@@ -73,6 +73,7 @@ public:
 
     static std::stack<model::Object*> op_stack;
     static std::vector<std::shared_ptr<CallFrame>> call_stack;
+
     static dep::HashMap<model::Object*> builtins;
 
     static bool running;
@@ -80,31 +81,35 @@ public:
 
     static model::Error* curr_error;
 
+    static dep::HashMap<model::Object*> std_modules;
+
     explicit Vm(const std::string& file_path_);
+
+    static void entry_std_modules();
 
     static void set_main_module(model::Module* src_module);
     static void exec_curr_code();
-    static void set_curr_code(const model::CodeObject* code_object);
-    static void throw_error ();
+    static void set_and_exec_curr_code(const model::CodeObject* code_object);
     static void load_required_modules(const dep::HashMap<model::Module*>& modules);
-    
-    static model::Object* get_stack_top();
 
     static void execute_instruction(const Instruction& instruction);
+
     static model::Object* get_return_val();
     static CallFrame* fetch_curr_call_frame();
-    static model::Object* fetch_one_from_stack_top();
 
+    static model::Object* fetch_one_from_stack_top();
     static auto fetch_two_from_stack_top(const std::string& op_name)
         -> std::tuple<model::Object*, model::Object*>;
 
     static model::Object* get_attr(const model::Object* obj, const std::string& attr);
-    static bool check_obj_is_true(model::Object* obj);
-    static void call_function(model::Object* func_obj, model::Object* args_obj, model::Object* self);
+    static bool is_true(model::Object* obj);
+    static void call(model::Object* func_obj, model::Object* args_obj, model::Object* self);
 
     static void instruction_throw(const std::string& name, const std::string& content);
-    static auto gen_positions()
+    static auto gen_pos_info()
         -> std::vector<std::pair<std::string, err::PositionInfo>>;
+    static void throw_error();
+
 
 private:
     static void exec_ADD(const Instruction& instruction);
