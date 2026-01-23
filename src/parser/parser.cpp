@@ -93,7 +93,7 @@ std::unique_ptr<BlockStmt> Parser::parse(const std::vector<Token>& tokens) {
     tokens_ = tokens;
     curr_tok_idx_ = 0;
     DEBUG_OUTPUT("parsing...");
-    std::vector<std::unique_ptr<Statement>> program_stmts;
+    std::vector<std::unique_ptr<Stmt>> program_stmts;
 
     // 打印 Token 序列（保留调试逻辑）
     DEBUG_OUTPUT("=== 所有 Token 序列 ===");

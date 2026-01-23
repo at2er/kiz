@@ -141,6 +141,7 @@ private:
     static void exec_JUMP_IF_FALSE(const Instruction& instruction);
     static void exec_THROW(const Instruction& instruction);
     static void exec_IS_INSTANCE(const Instruction& instruction);
+    static void exec_CREATE_OBJECT(const Instruction& instruction);
     static void exec_STOP(const Instruction& instruction);
 };
 

@@ -412,6 +412,7 @@ void Vm::execute_instruction(const Instruction& instruction) {
         case Opcode::JUMP_IF_FALSE:   exec_JUMP_IF_FALSE(instruction); break;
         case Opcode::THROW:           exec_THROW(instruction);         break;
         case Opcode::IS_INSTANCE:     exec_IS_INSTANCE(instruction);   break;
+        case Opcode::CREATE_OBJECT:  exec_CREATE_OBJECT(instruction);    break;
         case Opcode::STOP:            exec_STOP(instruction);          break;
         default:                      assert(false && "execute_instruction: 未知 opcode");
     }

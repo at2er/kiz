@@ -31,23 +31,23 @@ public:
 
 private:
     // parse stmt
-    std::unique_ptr<Statement> parse_stmt();
+    std::unique_ptr<Stmt> parse_stmt();
     std::unique_ptr<BlockStmt> parse_block(TokenType endswith = TokenType::End);
     std::unique_ptr<IfStmt> parse_if();
 
     // parse expr
-    std::unique_ptr<Expression> parse_expression();
-    std::unique_ptr<Expression> parse_and_or();
-    std::unique_ptr<Expression> parse_comparison();
-    std::unique_ptr<Expression> parse_add_sub();
-    std::unique_ptr<Expression> parse_mul_div_mod();
-    std::unique_ptr<Expression> parse_power();
-    std::unique_ptr<Expression> parse_unary();
-    std::unique_ptr<Expression> parse_factor();
+    std::unique_ptr<Expr> parse_expression();
+    std::unique_ptr<Expr> parse_and_or();
+    std::unique_ptr<Expr> parse_comparison();
+    std::unique_ptr<Expr> parse_add_sub();
+    std::unique_ptr<Expr> parse_mul_div_mod();
+    std::unique_ptr<Expr> parse_power();
+    std::unique_ptr<Expr> parse_unary();
+    std::unique_ptr<Expr> parse_factor();
 
     // parse factor
-    std::unique_ptr<Expression> parse_primary();
-    std::vector<std::unique_ptr<Expression>> parse_args(TokenType endswith);
+    std::unique_ptr<Expr> parse_primary();
+    std::vector<std::unique_ptr<Expr>> parse_args(TokenType endswith);
 };
 
 } // namespace kiz

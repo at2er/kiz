@@ -10,13 +10,13 @@
 
 namespace kiz {
 
-std::unique_ptr<Expression> Parser::parse_expression() {
+std::unique_ptr<Expr> Parser::parse_expression() {
     DEBUG_OUTPUT("parse the expression...");
     return parse_and_or(); // 直接调用合并后的函数
 }
 
 // 处理 and/or（优先级相同，左结合）
-std::unique_ptr<Expression> Parser::parse_and_or() {
+std::unique_ptr<Expr> Parser::parse_and_or() {
     DEBUG_OUTPUT("parsing and/or expression...");
     auto node = parse_comparison();
     
@@ -33,7 +33,7 @@ std::unique_ptr<Expression> Parser::parse_and_or() {
     return node;
 }
 
-std::unique_ptr<Expression> Parser::parse_comparison() {
+std::unique_ptr<Expr> Parser::parse_comparison() {
     DEBUG_OUTPUT("parsing comparison...");
     auto node = parse_add_sub();
     while (true) {
@@ -78,7 +78,7 @@ std::unique_ptr<Expression> Parser::parse_comparison() {
     return node;
 }
 
-std::unique_ptr<Expression> Parser::parse_add_sub() {
+std::unique_ptr<Expr> Parser::parse_add_sub() {
     DEBUG_OUTPUT("parsing add/sub...");
     auto node = parse_mul_div_mod();
     while (
@@ -93,7 +93,7 @@ std::unique_ptr<Expression> Parser::parse_add_sub() {
     return node;
 }
 
-std::unique_ptr<Expression> Parser::parse_mul_div_mod() {
+std::unique_ptr<Expr> Parser::parse_mul_div_mod() {
     DEBUG_OUTPUT("parsing mul/div/mod...");
     auto node = parse_power();
     while (
@@ -109,7 +109,7 @@ std::unique_ptr<Expression> Parser::parse_mul_div_mod() {
     return node;
 }
 
-std::unique_ptr<Expression> Parser::parse_power() {
+std::unique_ptr<Expr> Parser::parse_power() {
     DEBUG_OUTPUT("parsing power...");
     auto node = parse_unary();
     if (curr_token().type == TokenType::Caret) {
@@ -121,7 +121,7 @@ std::unique_ptr<Expression> Parser::parse_power() {
     return node;
 }
 
-std::unique_ptr<Expression> Parser::parse_unary() {
+std::unique_ptr<Expr> Parser::parse_unary() {
     DEBUG_OUTPUT("parsing unary...");
     if (curr_token().type == TokenType::Not) {
         auto op_token = skip_token(); // 跳过 not
@@ -140,7 +140,7 @@ std::unique_ptr<Expression> Parser::parse_unary() {
     return parse_factor();
 }
 
-std::unique_ptr<Expression> Parser::parse_factor() {
+std::unique_ptr<Expr> Parser::parse_factor() {
     DEBUG_OUTPUT("parsing factor...");
     auto node = parse_primary();
 
@@ -173,7 +173,7 @@ std::unique_ptr<Expression> Parser::parse_factor() {
     return node;
 }
 
-std::unique_ptr<Expression> Parser::parse_primary() {
+std::unique_ptr<Expr> Parser::parse_primary() {
     DEBUG_OUTPUT("parsing primary...");
     const auto tok = skip_token();
     if (tok.type == TokenType::Number) {
@@ -225,7 +225,7 @@ std::unique_ptr<Expression> Parser::parse_primary() {
         }
         skip_token("|");
         auto expr = parse_expression();
-        std::vector<std::unique_ptr<Statement>> stmts;
+        std::vector<std::unique_ptr<Stmt>> stmts;
         stmts.emplace_back(std::make_unique<ReturnStmt>(curr_token().pos, std::move(expr)));
 
         return std::make_unique<FnDeclExpr>(
@@ -236,7 +236,7 @@ std::unique_ptr<Expression> Parser::parse_primary() {
         );
     }
     if (tok.type == TokenType::LBrace) {
-        std::vector<std::pair<std::string, std::unique_ptr<Expression>>> init_vec{};
+        std::vector<std::pair<std::string, std::unique_ptr<Expr>>> init_vec{};
         while (curr_token().type != TokenType::RBrace) {
             auto key = skip_token().text;
             skip_token("=");
@@ -261,8 +261,8 @@ std::unique_ptr<Expression> Parser::parse_primary() {
     return nullptr;
 }
 
-std::vector<std::unique_ptr<Expression>> Parser::parse_args(const TokenType endswith){
-    std::vector<std::unique_ptr<Expression>> params;
+std::vector<std::unique_ptr<Expr>> Parser::parse_args(const TokenType endswith){
+    std::vector<std::unique_ptr<Expr>> params;
     while (curr_token().type != endswith) {
         params.emplace_back(parse_expression());
         if (curr_token().type == TokenType::Comma) skip_token(",");

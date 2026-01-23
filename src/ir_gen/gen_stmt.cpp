@@ -66,16 +66,54 @@ void IRGenerator::gen_block(const BlockStmt* block) {
                 );
                 break;
             }
+            case AstType::ObjectStmt: {
+                const auto* obj_decl = dynamic_cast<ObjectStmt*>(stmt.get());
+                const size_t name_idx = get_or_add_name(curr_names, obj_decl->name);
+
+                curr_code_list.emplace_back(
+                    Opcode::CREATE_OBJECT,
+                    std::vector<size_t>{},
+                    stmt->pos
+                );
+
+                curr_code_list.emplace_back(
+                    Opcode::SET_LOCAL,
+                    std::vector<size_t>{name_idx},
+                    stmt->pos
+                );
+
+                for (const auto& sub_assign: obj_decl->body->statements) {
+                    const auto sub_assign_stmt = dynamic_cast<AssignStmt*>(sub_assign.get());
+                    if(sub_assign_stmt == nullptr) {
+                        err::error_reporter(file_path, stmt->pos,
+                "SyntaxError",
+                "Object Statement cannot include other code (only assign statement support)"
+                        );
+                    }
+                    curr_code_list.emplace_back(
+                        Opcode::LOAD_VAR,
+                        std::vector{name_idx},
+                        stmt->pos
+                    );
+
+                    assert(sub_assign_stmt->expr.get() != nullptr);
+                    gen_expr(sub_assign_stmt->expr.get());
+                    const size_t sub_name_idx = get_or_add_name(curr_names, sub_assign_stmt->name);
+
+                    curr_code_list.emplace_back(
+                        Opcode::SET_ATTR,
+                        std::vector{sub_name_idx},
+                        stmt->pos
+                    );
+
+                }
+
+                break;
+            }
             case AstType::ExprStmt: {
                 // 表达式语句：生成表达式IR + 弹出结果（避免栈泄漏）
                 auto* expr_stmt = dynamic_cast<ExprStmt*>(stmt.get());
                 gen_expr(expr_stmt->expr.get());
-                // curr_code_list.emplace_back(
-                // Opcode::POP_TOP,
-                // std::vector<size_t>{},
-                //     stmt->start_ln,
-                //     stmt->end_ln
-                // );
                 break;
             }
             case AstType::IfStmt:

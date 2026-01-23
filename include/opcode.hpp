@@ -15,14 +15,19 @@ enum class Opcode {
     OP_EQ, OP_GT, OP_LT,
     OP_AND, OP_NOT, OP_OR,
     OP_IS, OP_IN,
+
     CALL, RET,
     GET_ATTR, SET_ATTR, CALL_METHOD,
+
     LOAD_VAR, LOAD_CONST,
     SET_GLOBAL, SET_LOCAL, SET_NONLOCAL,
+
     JUMP, JUMP_IF_FALSE, THROW, 
     MAKE_LIST, MAKE_DICT,
-    IMPORT, TRY_START, TRY_END, LOAD_ERROR, IS_INSTANCE,
-    POP_TOP, SWAP, COPY_TOP, STOP
+    IMPORT, TRY_START, TRY_END, LOAD_ERROR,
+
+    IS_INSTANCE, CREATE_OBJECT,
+    STOP
 };
 
 inline std::string opcode_to_string(Opcode opc) {
@@ -73,18 +78,14 @@ inline std::string opcode_to_string(Opcode opc) {
         case Opcode::MAKE_LIST:   return "MAKE_LIST";
         case Opcode::MAKE_DICT:   return "MAKE_DICT";
 
-        // 栈操作
-        case Opcode::POP_TOP:     return "POP_TOP";
-        case Opcode::SWAP:        return "SWAP";
-        case Opcode::COPY_TOP:    return "COPY_TOP";
-        case Opcode::STOP:        return "STOP";
-            
         // 其他
         case Opcode::IMPORT:      return "IMPORT";
         case Opcode::TRY_START:   return "TRY_START";
         case Opcode::TRY_END:     return "TRY_END";
         case Opcode::LOAD_ERROR:  return "LOAD_ERROR";
         case Opcode::IS_INSTANCE: return "IS_INSTANCE";
+        case Opcode::CREATE_OBJECT: return "CREATE_OBJECT";
+        case Opcode::STOP:        return "STOP";
         
         // 兜底
         default:                  return "UNKNOWN_OPCODE(" + std::to_string(static_cast<int>(opc)) + ")";

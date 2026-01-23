@@ -5,7 +5,7 @@
 
 namespace kiz {
 
-void IRGenerator::gen_expr(Expression* expr) {
+void IRGenerator::gen_expr(Expr* expr) {
     assert(expr && "gen_expr: 表达式节点为空");
     switch (expr->ast_type) {
         case AstType::NumberExpr:
@@ -263,7 +263,7 @@ void IRGenerator::gen_dict(DictDeclExpr* expr) {
     );
 }
 
-void IRGenerator::gen_literal(Expression* expr) {
+void IRGenerator::gen_literal(Expr* expr) {
     assert(expr && "gen_literal: 字面量节点为空");
     model::Object* const_obj = nullptr;
 

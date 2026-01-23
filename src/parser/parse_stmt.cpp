@@ -14,7 +14,7 @@ namespace kiz {
 // 需要end结尾的块
 std::unique_ptr<BlockStmt> Parser::parse_block(TokenType endswith) {
     DEBUG_OUTPUT("parsing block (with end)");
-    std::vector<std::unique_ptr<Statement>> block_stmts;
+    std::vector<std::unique_ptr<Stmt>> block_stmts;
     auto block_tok = curr_token();
 
     while (curr_tok_idx_ < tokens_.size()) {
@@ -55,7 +55,7 @@ std::unique_ptr<IfStmt> Parser::parse_if() {
         skip_start_of_block();
         if (curr_token().type == TokenType::If) {
             // else if分支
-            std::vector<std::unique_ptr<Statement>> else_if_stmts;
+            std::vector<std::unique_ptr<Stmt>> else_if_stmts;
             else_if_stmts.push_back(parse_stmt());
             else_block = std::make_unique<BlockStmt>(curr_token().pos, std::move(else_if_stmts));
         } else {
@@ -72,7 +72,7 @@ std::unique_ptr<IfStmt> Parser::parse_if() {
 }
 
 // parse_stmt实现
-std::unique_ptr<Statement> Parser::parse_stmt() {
+std::unique_ptr<Stmt> Parser::parse_stmt() {
     DEBUG_OUTPUT("parsing stmt");
     const Token curr_tok = curr_token();
 
@@ -138,7 +138,7 @@ std::unique_ptr<Statement> Parser::parse_stmt() {
         DEBUG_OUTPUT("parsing return");
         auto tok = skip_token("return");
         // return后可跟表达式（也可无，视为返回nil）
-        std::unique_ptr<Expression> return_expr = parse_expression();
+        std::unique_ptr<Expr> return_expr = parse_expression();
         skip_end_of_ln();
         return std::make_unique<ReturnStmt>(tok.pos, std::move(return_expr));
     }
@@ -176,7 +176,7 @@ std::unique_ptr<Statement> Parser::parse_stmt() {
         auto tok = skip_token("nonlocal");
         const std::string name = skip_token().text;
         skip_token("=");
-        std::unique_ptr<Expression> expr = parse_expression();
+        std::unique_ptr<Expr> expr = parse_expression();
         skip_end_of_ln();
         return std::make_unique<NonlocalAssignStmt>(tok.pos, name, std::move(expr));
     }
@@ -187,16 +187,27 @@ std::unique_ptr<Statement> Parser::parse_stmt() {
         auto tok = skip_token("global");
         const std::string name = skip_token().text;
         skip_token("=");
-        std::unique_ptr<Expression> expr = parse_expression();
+        std::unique_ptr<Expr> expr = parse_expression();
         skip_end_of_ln();
         return std::make_unique<GlobalAssignStmt>(tok.pos, name, std::move(expr));
+    }
+
+    // 解析object语句（适配end结尾）
+    if (curr_tok.type == TokenType::Object) {
+        DEBUG_OUTPUT("parsing object");
+        auto tok = skip_token("object");
+        skip_start_of_block();
+        const std::string name = skip_token().text;
+        auto object_block = parse_block();
+        skip_token("end");
+        return std::make_unique<ObjectStmt>(tok.pos, name, std::move(object_block));
     }
     
     // 解析throw语句
     if (curr_tok.type == TokenType::Throw) {
         DEBUG_OUTPUT("parsing throw");
         auto tok = skip_token("throw");
-        std::unique_ptr<Expression> expr = parse_expression();
+        std::unique_ptr<Expr> expr = parse_expression();
         skip_end_of_ln();
         return std::make_unique<ThrowStmt>(tok.pos, std::move(expr));
     }
@@ -207,7 +218,7 @@ std::unique_ptr<Statement> Parser::parse_stmt() {
         auto tok = skip_token("for");
         const std::string name = skip_token().text;
         skip_token(":");
-        std::unique_ptr<Expression> expr = parse_expression();
+        std::unique_ptr<Expr> expr = parse_expression();
 
         skip_start_of_block();
         auto for_block = parse_block();
@@ -232,7 +243,7 @@ std::unique_ptr<Statement> Parser::parse_stmt() {
             auto tok = skip_token("catch");
             const std::string name = skip_token().text;
             skip_token(":");
-            std::unique_ptr<Expression> expr = parse_expression();
+            std::unique_ptr<Expr> expr = parse_expression();
 
             skip_start_of_block();
             auto catch_block = parse_block(TokenType::Catch);

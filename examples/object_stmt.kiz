@@ -1,0 +1,24 @@
+object Point
+    x = 0
+    y = 0
+    fn __call__(this, x, y)
+        o = create(this)
+        o.x = x
+        o.y = y
+        return o
+    end
+
+    fn __add__(this, other)
+        return Point(this.x + other.x, this.y + other.y)
+    end
+
+    fn to_string(this)
+        return "Point(x=" + str(c.x) + ", y=" + str(c.y) +")"
+    end
+
+end
+
+a = Point(3,5)
+b = Point(4,0)
+c = a + b
+print(c.to_string())

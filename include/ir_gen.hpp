@@ -45,10 +45,10 @@ public:
     void gen_try(TryStmt* try_stmt);
     void gen_block(const BlockStmt* block);
 
-    void gen_literal(Expression* expr);
+    void gen_literal(Expr* expr);
     void gen_fn_call(CallExpr* expr);
     void gen_dict(DictDeclExpr* expr);
-    void gen_expr(Expression* expr);
+    void gen_expr(Expr* expr);
 
     void gen_if(IfStmt* if_stmt);
     void gen_while(WhileStmt* while_stmt);

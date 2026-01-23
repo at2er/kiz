@@ -134,6 +134,11 @@ void Vm::exec_THROW(const Instruction& instruction) {
     throw_error();
 }
 
+void Vm::exec_CREATE_OBJECT(const Instruction& instruction) {
+    auto obj = new model::Object();
+    op_stack.emplace(obj);
+}
+
 void Vm::exec_STOP(const Instruction& instruction) {
     DEBUG_OUTPUT("exec stop...");
     running = false;
