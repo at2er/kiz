@@ -1,4 +1,5 @@
 #include "../../src/models/models.hpp"
+#include "include/builtin_functions.hpp"
 
 namespace model {
 
@@ -165,6 +166,62 @@ Object* list_next(Object* self, const List* args) {
     }
     self->attrs.insert("__current_index__", new Int(dep::BigInt(0)));
     return new Bool(false);
+}
+
+Object* list_foreach(Object* self, const List* args) {
+    auto func_obj = builtin::get_one_arg(args);
+
+    auto self_list = dynamic_cast<List*>(self);
+    assert(self_list != nullptr);
+
+    dep::BigInt idx = 0;
+    for (auto e : self_list->val) {
+        kiz::Vm::call(func_obj, new List({e}), nullptr);
+        idx += 1;
+    }
+    return new Nil();
+}
+
+Object* list_reverse(Object* self, const List* args) {
+    const auto self_list = dynamic_cast<List*>(self);
+    assert(self_list != nullptr);
+    std::ranges::reverse(self_list->val);
+    return new Nil();
+}
+
+Object* list_extend(Object* self, const List* args) {
+    auto other_list_obj = builtin::get_one_arg(args);
+    auto other_list = dynamic_cast<List*>(other_list_obj);
+    assert(other_list != nullptr);
+
+    auto self_list = dynamic_cast<List*>(self);
+    assert(self_list != nullptr);
+    for (auto e: other_list->val) {
+        self_list->val.push_back(e);
+    }
+    return new Nil();
+}
+
+Object* list_pop(Object* self, const List* args) {
+
+}
+
+Object* list_insert(Object* self, const List* args) {
+
+}
+
+Object* list_find(Object* self, const List* args) {
+
+}
+
+Object* list_map(Object* self, const List* args) {
+
+}
+Object* list_count(Object* self, const List* args) {
+
+}
+Object* list_filter(Object* self, const List* args) {
+
 }
 
 }  // namespace model

@@ -1,0 +1,13 @@
+a = [1,2,3]
+print(a)
+print(a.contains(4))
+a.append(8)
+a.extend([333, 444, 555])
+print(a)
+
+a.reverse()
+print(a)
+
+a.foreach(fn (e)
+    print(e)
+end)

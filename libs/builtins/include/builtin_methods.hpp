@@ -53,10 +53,22 @@ Object* dict_contains(Object* self, const List* args);;
 Object* list_eq(Object* self, const List* args);
 Object* list_add(Object* self, const List* args);
 Object* list_mul(Object* self, const List* args);
-Object* list_contains(Object* self, const List* args);
-Object* list_append(Object* self, const List* args);
 Object* list_call(Object* self, const List* args);
 Object* list_bool(Object* self, const List* args);
 Object* list_next(Object* self, const List* args);
+// 普通方法
+Object* list_contains(Object* self, const List* args);
+Object* list_append(Object* self, const List* args);
+Object* list_foreach(Object* self, const List* args);
+Object* list_reverse(Object* self, const List* args);
+Object* list_extend(Object* self, const List* args);
+Object* list_pop(Object* self, const List* args);
+Object* list_insert(Object* self, const List* args);
+Object* list_find(Object* self, const List* args);
+Object* list_map(Object* self, const List* args);
+Object* list_count(Object* self, const List* args);
+Object* list_filter(Object* self, const List* args);
+
+
 
 }

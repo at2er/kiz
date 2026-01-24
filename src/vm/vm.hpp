@@ -43,8 +43,6 @@ struct TryBlockInfo {
     size_t catch_start = 0;
 };
 
-std::pair<std::string, std::string> get_err_name_and_msg(const model::Object* err_obj);
-
 struct CallFrame {
     std::string name;
 
@@ -85,6 +83,7 @@ public:
 
     explicit Vm(const std::string& file_path_);
 
+    static void entry_builtins();
     static void entry_std_modules();
 
     static void set_main_module(model::Module* src_module);
