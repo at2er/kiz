@@ -64,6 +64,16 @@ Object* str_contains(Object* self, const List* args);
 Object* str_call(Object* self, const List* args);
 Object* str_bool(Object* self, const List* args);
 Object* str_hash(Object* self, const List* args);
+Object* str_next(Object* self, const List* args);
+Object* str_getitem(Object* self, const List* args);
+// 普通方法
+Object* str_foreach(Object* self, const List* args);
+Object* str_map(Object* self, const List* args);
+Object* str_count(Object* self, const List* args);
+Object* str_filter(Object* self, const List* args);
+Object* str_startswith(Object* self, const List* args);
+Object* str_endswith(Object* self, const List* args);
+Object* str_len(Object* self, const List* args);
 
 // Dict 类型原生函数
 Object* dict_eq(Object* self, const List* args);
@@ -71,7 +81,6 @@ Object* dict_add(Object* self, const List* args);
 Object* dict_contains(Object* self, const List* args);
 Object* dict_setitem(Object* self, const List* args);
 Object* dict_getitem(Object* self, const List* args);
-
 
 // List 类型原生函数
 Object* list_eq(Object* self, const List* args);
@@ -93,6 +102,7 @@ Object* list_insert(Object* self, const List* args);
 Object* list_find(Object* self, const List* args);
 Object* list_map(Object* self, const List* args);
 Object* list_count(Object* self, const List* args);
+Object* list_len(Object* self, const List* args);
 Object* list_filter(Object* self, const List* args);
 
 

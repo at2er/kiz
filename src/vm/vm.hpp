@@ -85,6 +85,8 @@ public:
     static void set_and_exec_curr_code(const model::CodeObject* code_object);
 
     static void execute_instruction(const Instruction& instruction);
+    static std::string obj_to_str(model::Object* for_cast_obj);
+    static std::string obj_to_debug_str(model::Object* for_cast_obj);
 
     static CallFrame* fetch_curr_call_frame();
     static model::Object* fetch_one_from_stack_top();

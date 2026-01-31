@@ -18,5 +18,5 @@ try
 catch e: Str
     print("error is str")
 catch e: Error
-    print(e) #.k) # 故意使其报错
+    print(e.k) # 故意使其报错
 end

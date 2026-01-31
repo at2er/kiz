@@ -198,6 +198,21 @@ void Vm::execute_instruction(const Instruction& instruction) {
     }
 }
 
+std::string Vm::obj_to_str(model::Object* for_cast_obj) {
+    call_function(
+        get_attr(for_cast_obj, "__str__"), new model::List({}), for_cast_obj
+    );
+    std::string val = model::cast_to_str(for_cast_obj)->val;
+    return val;
+}
 
+
+std::string Vm::obj_to_debug_str(model::Object* for_cast_obj) {
+    call_function(
+        get_attr(for_cast_obj, "__str__"), new model::List({}), for_cast_obj
+    );
+    std::string val = model::cast_to_str(for_cast_obj)->val;
+    return val;
+}
 
 } // namespace kiz

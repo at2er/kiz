@@ -263,4 +263,8 @@ Object* list_filter(Object* self, const List* args) {
     return new Nil();
 }
 
+Object* list_len(Object* self, const List* args) {
+    return new Nil();
+}
+
 }  // namespace model

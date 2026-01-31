@@ -109,9 +109,8 @@ void Vm::exec_SET_GLOBAL(const Instruction& instruction) {
     }
     std::string var_name = call_stack.back()->code_object->names[name_idx];
 
-    model::Object* var_val = op_stack.top();
-    op_stack.pop();
-    var_val->make_ref();
+    model::Object* var_val = fetch_one_from_stack_top();
+    var_val = model::copy_or_ref(var_val);
 
     auto var_it = global_frame->locals.find(var_name);
 
@@ -131,9 +130,8 @@ void Vm::exec_SET_LOCAL(const Instruction& instruction) {
     const std::string var_name = curr_frame->code_object->names[name_idx];
     DEBUG_OUTPUT("ok to get var name: " + var_name);
 
-    model::Object* var_val = op_stack.top();
-    op_stack.pop();
-    var_val->make_ref();
+    model::Object* var_val = fetch_one_from_stack_top();
+    var_val = model::copy_or_ref(var_val);
     DEBUG_OUTPUT("var val: " + var_val->debug_string());
 
     auto var_it = curr_frame->locals.find(var_name);
@@ -168,9 +166,8 @@ void Vm::exec_SET_NONLOCAL(const Instruction& instruction) {
         assert(false);
     }
 
-    model::Object* var_val = op_stack.top();
-    op_stack.pop();
-    var_val->make_ref();
+    model::Object* var_val = fetch_one_from_stack_top();
+    var_val = model::copy_or_ref(var_val);
 
     target_frame->locals.insert(var_name, var_val);
 }

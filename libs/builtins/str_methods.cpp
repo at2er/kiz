@@ -5,11 +5,12 @@ namespace model {
 
 // String.__call__
 Object* str_call(Object* self, const List* args) {
-    std::string val = 
-        args->val.empty()
-        ? ""
-        : builtin::get_one_arg(args)->debug_string();
-
+    std::string val;
+    if (args->val.empty()) {
+        val = "";
+    } else {
+        val = kiz::Vm::obj_to_str(args->val[0]);
+    }
     return new String(val);
 }
 
@@ -92,5 +93,51 @@ Object* str_hash(Object* self, const List* args) {
     auto hashed_str = dep::hash_string(self_str->val);
     return new Int(dep::BigInt(hashed_str));
 }
+
+Object* str_next(Object* self, const List* args) {
+    return new Nil();
+
+}
+
+Object* str_getitem(Object* self, const List* args) {
+    return new Nil();
+
+}
+
+Object* str_foreach(Object* self, const List* args) {
+    return new Nil();
+
+}
+
+Object* str_map(Object* self, const List* args) {
+    return new Nil();
+
+}
+
+Object* str_count(Object* self, const List* args) {
+    return new Nil();
+
+}
+
+Object* str_filter(Object* self, const List* args) {
+    return new Nil();
+
+}
+
+Object* str_startswith(Object* self, const List* args) {
+    return new Nil();
+
+}
+
+Object* str_endswith(Object* self, const List* args) {
+    return new Nil();
+
+}
+
+Object* str_len(Object* self, const List* args) {
+    return new Nil();
+
+}
+
 
 }  // namespace model

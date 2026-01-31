@@ -301,7 +301,7 @@ public:
         attrs.insert("__parent__", based_str);
     }
     [[nodiscard]] std::string debug_string() const override {
-        return val;
+        return '"'+val+'"';
     }
 };
 
@@ -416,7 +416,8 @@ inline auto create_decimal(dep::Decimal n) {
 }
 
 inline auto create_list(std::vector<Object*> n) {
-    auto o = new List(std::move(n));
+    auto o = new List(n);
+    o->make_ref();
     return o;
 }
 
@@ -436,6 +437,47 @@ inline auto cast_to_bool(Object* o) {
     auto obj = dynamic_cast<Bool*>(o);
     assert(obj != nullptr);
     return obj;
+}
+
+inline auto cast_to_list(Object* o) {
+    auto obj = dynamic_cast<List*>(o);
+    assert(obj != nullptr);
+    return obj;
+}
+
+inline auto copy_or_ref(Object* obj) -> Object* {
+    switch (obj->get_type()) {
+
+    case Object::ObjectType::OT_List: {
+        std::vector<Object*> new_val;
+        for (auto val : cast_to_list(obj)->val) {
+            new_val.push_back(copy_or_ref(val));
+        }
+        return create_list(std::move(new_val));
+    }
+
+    case Object::ObjectType::OT_Dictionary: {
+        std::vector<std::pair<
+            dep::BigInt, std::pair< Object*, Object* >
+        >> elem_list;
+        auto dict_obj = dynamic_cast<Dictionary*>(obj);
+        assert(dict_obj != nullptr);
+        for (auto& [_, kv_pair] : dict_obj->val.to_vector()) {
+            // key是hashable value, 也就是不可变对象, 可以引用传递, 应该没有神人为可变对象重载__hash__方法的
+            kv_pair.first->make_ref();
+            elem_list.emplace_back(_, std::pair{
+                kv_pair.first, copy_or_ref(kv_pair.second)
+            });
+        }
+        return new Dictionary(dep::Dict(elem_list));
+    }
+
+    default: {
+        obj->make_ref();
+        return obj;
+    }
+
+    }
 }
 
 };
