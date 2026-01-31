@@ -328,6 +328,8 @@ model::Object* type_of_obj(model::Object* self, const model::List* args) {
         case model::Object::ObjectType::OT_Function: type_str = "Func"; break;
         case model::Object::ObjectType::OT_List: type_str = "List"; break;
         case model::Object::ObjectType::OT_Dictionary: type_str = "Dict"; break;
+        case model::Object::ObjectType::OT_Decimal: type_str = "Decimal"; break;
+        case model::Object::ObjectType::OT_CodeObject: type_str = "__CodeObject"; break;
         case model::Object::ObjectType::OT_CppFunction: type_str = "NFunc"; break;
         case model::Object::ObjectType::OT_Module: type_str = "Module"; break;
         default: type_str = "<Unknown>"; break;

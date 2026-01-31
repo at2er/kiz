@@ -145,29 +145,44 @@ std::vector<Token> Lexer::tokenize(const std::string& src, size_t lineno_start) 
         } else if (isdigit(src[pos]) || (src[pos] == '.' && pos + 1 < src.size() && isdigit(src[pos + 1]))) {
             size_t j = pos;
             bool has_dot = false;
+            bool sci_notation = false; // 标记是否解析到合法的科学计数法后缀
 
-            // 仅解析整数（纯数字）或简单小数（一个小数点+前后数字）
+            // 解析：整数 + 简单小数 + 科学计数法（e/E+可选正负+数字）
             while (j < src.size()) {
                 if (isdigit(src[j])) {
                     ++j;
                 } else if (src[j] == '.' && !has_dot) {
-                    // 小数点只能出现一次，且前后必须有数字
+                    // 小数点规则：仅出现一次，且后必须有数字
                     has_dot = true;
                     ++j;
-                    // 小数点后必须有数字，否则终止解析
                     if (j >= src.size() || !isdigit(src[j])) {
-                        --j; // 回退到小数点位置，不解析无效的小数点
+                        --j; // 回退，不解析无效小数点
                         break;
+                    }
+                } else if ((src[j] == 'e' || src[j] == 'E') && !sci_notation) {
+                    // 科学计数法核心解析：e/E仅出现一次，后续必须有【可选正负号+至少一位数字】
+                    sci_notation = true;
+                    ++j; // 跳过e/E
+                    // 处理e/E后的可选正负号
+                    if (j < src.size() && (src[j] == '+' || src[j] == '-')) {
+                        ++j; // 跳过正负号
+                    }
+                    if (j >= src.size() || !isdigit(src[j])) {
+                        --j;
+                        break;
+                    }
+                    while (j < src.size() && isdigit(src[j])) {
+                        ++j;
                     }
                 } else {
                     break;
                 }
             }
 
-            // 提取数字字符串
+            // 提取数字原字符串（完整保留：整数/小数/科学计数法格式，无截断）
             std::string num_str = src.substr(pos, j - pos);
-            // 根据是否包含小数点区分类型：小数用Decimal，整数用Number
-            TokenType token_type = has_dot ? TokenType::Decimal : TokenType::Number;
+            // 类型判定规则：包含科学计数法 或 有小数点 → 均为Decimal类型
+            TokenType token_type = (sci_notation || has_dot) ? TokenType::Decimal : TokenType::Number;
 
             tokens.emplace_back(token_type, num_str, lineno, start_col);
             col += (j - pos);
