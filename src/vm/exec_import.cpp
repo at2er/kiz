@@ -14,6 +14,7 @@
 #include <string>
 #include <stdexcept>
 #include <cstddef>
+#include <format>
 
 // 跨平台兼容：处理Windows/Linux/macOS的编译差异
 #ifdef _WIN32
@@ -140,17 +141,14 @@ void Vm::exec_IMPORT(const Instruction& instruction) {
     }
 
     bool file_in_path = false;
-    std::vector<fs::path> for_search_paths = {
-        "",
-        "../",
-        get_exe_abs_dir()
+    std::array for_search_paths = {
+        get_exe_abs_dir() / fs::path(file_path).parent_path() / fs::path(module_path),
+        get_exe_abs_dir() / fs::path(module_path)
     };
     fs::path actually_found_path = "";
 
     for (const auto& for_search_path : for_search_paths) {
-        if (fs::is_regular_file(
-            path_combine(get_exe_abs_dir(), for_search_path, fs::path(module_path))
-        )) {
+        if (fs::is_regular_file( for_search_path )) {
             file_in_path = true;
             actually_found_path = for_search_path;
             break;
@@ -158,9 +156,7 @@ void Vm::exec_IMPORT(const Instruction& instruction) {
     }
 
     if (file_in_path) {
-        content = err::SrcManager::get_file_by_path(
-            path_combine(get_exe_abs_dir(), actually_found_path, fs::path(module_path)).string()
-        );
+        content = err::SrcManager::get_file_by_path(actually_found_path.string());
     } else if (auto std_init_it = std_modules.find(module_path)) {
         auto std_init_func = dynamic_cast<model::NativeFunction*>(std_init_it->value);
         assert(std_init_func != nullptr);
@@ -176,7 +172,9 @@ void Vm::exec_IMPORT(const Instruction& instruction) {
         loaded_modules.insert(module_path, module_obj);
         return;
     } else {
-        throw NativeFuncError("PathError", "Undefined module named "+module_path);
+        throw NativeFuncError("PathError", std::format(
+            "Failed to find module in path '{}', tried '{}', '{}'", module_path,
+            for_search_paths[0].string(), for_search_paths[1].string()));
     }
     
     Lexer lexer(module_path);
@@ -234,9 +232,9 @@ void Vm::exec_IMPORT(const Instruction& instruction) {
         }
 
         if (curr_inst.opc != Opcode::JUMP && curr_inst.opc != Opcode::JUMP_IF_FALSE &&
-            curr_inst.opc != Opcode::RET) {
+            curr_inst.opc != Opcode::RET && curr_inst.opc != Opcode::JUMP_IF_FINISH_HANDLE_ERROR) {
             curr_frame.pc++;
-        }
+            }
 
     }
 

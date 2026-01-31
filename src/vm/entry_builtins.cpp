@@ -1,3 +1,5 @@
+#include <format>
+
 #include "vm.hpp"
 #include "../models/models.hpp"
 #include "builtins/include/builtin_functions.hpp"
@@ -156,9 +158,11 @@ void Vm::entry_builtins() {
         auto err_name = args->val[0];
         auto err_msg = args->val[1];
 
-        auto err = new model::Error();
+        auto err = new model::Error(gen_pos_info());
         err->attrs.insert("__name__", err_name);
         err->attrs.insert("__msg__", err_msg);
+        std::cout << std::format("throw Err pos f{} c{} l{}",
+                    err->positions.back().first, err->positions.back().second.col_start, err->positions.back().second.lno_start) << std::endl;
         return err;
     }));
 

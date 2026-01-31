@@ -27,9 +27,11 @@ enum class Opcode : uint8_t {
 
     JUMP, JUMP_IF_FALSE, THROW, 
     MAKE_LIST, MAKE_DICT,
-    IMPORT, ENTER_TRY, POP_TRY_FRAME, LOAD_ERROR,
+    IMPORT,
+    ENTER_TRY, MARK_HANDLE_ERROR,
+    JUMP_IF_FINISH_HANDLE_ERROR, LOAD_ERROR,
 
-    IS_INSTANCE, CREATE_OBJECT,
+    IS_CHILD, CREATE_OBJECT,
     STOP
 };
 
@@ -88,9 +90,10 @@ inline std::string opcode_to_string(Opcode opc) {
         // 其他
         case Opcode::IMPORT:      return "IMPORT";
         case Opcode::ENTER_TRY:   return "ENTER_TRY";
-        case Opcode::POP_TRY_FRAME:    return "POP_TRY_FRAME";
         case Opcode::LOAD_ERROR:  return "LOAD_ERROR";
-        case Opcode::IS_INSTANCE: return "IS_INSTANCE";
+        case Opcode::JUMP_IF_FINISH_HANDLE_ERROR : return "JUMP_IF_FINISH_HANDLE_ERROR";
+        case Opcode::MARK_HANDLE_ERROR:   return "MARK_HANDLE_ERROR";
+        case Opcode::IS_CHILD: return "IS_CHILD";
         case Opcode::CREATE_OBJECT: return "CREATE_OBJECT";
         case Opcode::STOP:        return "STOP";
 

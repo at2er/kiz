@@ -383,6 +383,23 @@ public:
     }
 };
 
+inline auto unique_nil = new Nil();
+inline auto unique_false = new Bool(false);
+inline auto unique_true = new Bool(true);
+
+inline auto load_nil() {
+    unique_nil->make_ref();
+    return unique_nil;
+}
+inline auto load_false() {
+    unique_false->make_ref();
+    return unique_false;
+}
+inline auto load_true() {
+    unique_true->make_ref();
+    return unique_true;
+}
+
 inline auto create_int(dep::BigInt n) {
     auto o = new Int(std::move(n));
     return o;

@@ -15,7 +15,7 @@ model::Object* print(model::Object* self, const model::List* args) {
         text += arg->debug_string() + " ";
     }
     std::cout << text << std::endl;
-    return new model::Nil();
+    return model::load_nil();
 }
 
 model::Object* input(model::Object* self, const model::List* args) {
@@ -79,7 +79,7 @@ Built-in Objects:
     __Nil
 )";
     std::cout << text;
-    return new model::Nil();
+    return model::load_nil();
 }
 
 model::Object* breakpoint(model::Object* self, const model::List* args) {
@@ -123,7 +123,7 @@ model::Object* breakpoint(model::Object* self, const model::List* args) {
     std::string input;
     std::getline(std::cin, input);
     if (input == "Y") {
-        return new model::Nil();
+        return model::load_nil();
     }
     throw KizStopRunningSignal();
 }
@@ -131,10 +131,10 @@ model::Object* breakpoint(model::Object* self, const model::List* args) {
 model::Object* cmd(model::Object* self, const model::List* args) {
     auto arg_vector = args->val;
     if (arg_vector.empty()) {
-        return new model::Nil();
+        return model::load_nil();
     }
-    system(args[0].debug_string().c_str());
-    return new model::Nil();
+    std::system(args[0].debug_string().c_str());
+    return model::load_nil();
 }
 
 model::Object* now(model::Object* self, const model::List* args) {
@@ -184,7 +184,7 @@ model::Object* range(model::Object* self, const model::List* args) {
         auto end_int_obj = dynamic_cast<model::Int*>(end_obj);
         assert(end_int_obj != nullptr);
         end_int = end_int_obj->val;
-    } else return new model::Nil();
+    } else return model::load_nil();
 
     for (dep::BigInt i = start_int; i < end_int; i+=step_int) {
         auto i_obj = new model::Int(i);
@@ -196,19 +196,19 @@ model::Object* range(model::Object* self, const model::List* args) {
 model::Object* setattr(model::Object* self, const model::List* args) {
     auto arg_vector = args->val;
     if (arg_vector.size() != 3) {
-        return new model::Nil();
+        return model::load_nil();
     }
     auto for_set = arg_vector[0];
     auto attr_name = arg_vector[1];
     auto value = arg_vector[2];
     for_set->attrs.insert(attr_name->debug_string(), value);
-    return new model::Nil();
+    return model::load_nil();
 }
 
 model::Object* getattr(model::Object* self, const model::List* args) {
     auto arg_vector = args->val;
     if (arg_vector.size() == 1) {
-        return new model::Nil();
+        return model::load_nil();
     }
     model::Object* obj;
     model::Object* attr_name;
@@ -244,7 +244,7 @@ model::Object* getattr(model::Object* self, const model::List* args) {
         }
 
     }
-    return new model::Nil();
+    return model::load_nil();
 }
 
 model::Object* delattr(model::Object* self, const model::List* args) {
@@ -255,7 +255,7 @@ model::Object* delattr(model::Object* self, const model::List* args) {
     model::Object* obj = arg_vector[0];
     model::Object* attr_name = arg_vector[1];
     obj->attrs.del(attr_name->debug_string());
-    return new model::Nil();
+    return model::load_nil();
 }
 
 model::Object* hasattr(model::Object* self, const model::List* args) {
@@ -293,7 +293,7 @@ model::Object* hasattr(model::Object* self, const model::List* args) {
             return new model::Bool(false);
         }
     }
-    return new model::Nil();
+    return model::load_nil();
 }
 
 model::Object* get_refc(model::Object* self, const model::List* args) {

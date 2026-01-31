@@ -5,7 +5,11 @@
 namespace kiz {
 void execute_unit(const Instruction& instruction) {
     switch (instruction.opc) {
-    case Opcode::OP_ADD:
+    // case Opcode::OP_ADD:
+    //     auto b = fetch_one_from_stack_top();
+    //     auto a = fetch_one_from_stack_top();
+    //     handle_call(get_attr(a, "__add__"), model::create_list({b}), a);
+    //     return;
 
     case Opcode::OP_SUB:
 
@@ -76,7 +80,9 @@ void execute_unit(const Instruction& instruction) {
 
     case Opcode::ENTER_TRY:
 
-    case Opcode::POP_TRY_FRAME:
+    case Opcode::JUMP_IF_FINISH_HANDLE_ERROR:
+
+    case Opcode::MARK_HANDLE_ERROR:
 
     case Opcode::THROW:
 
@@ -87,7 +93,7 @@ void execute_unit(const Instruction& instruction) {
 
     case Opcode::JUMP_IF_FALSE:
 
-    case Opcode::IS_INSTANCE:
+    case Opcode::IS_CHILD:
 
     case Opcode::CREATE_OBJECT:
 

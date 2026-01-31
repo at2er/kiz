@@ -39,7 +39,8 @@ struct Instruction {
     Instruction(Opcode o, std::vector<size_t> ol, err::PositionInfo& p) : opc(o), opn_list(std::move(ol)), pos(std::move(p)) {}
 };
 
-struct TryBlockInfo {
+struct TryFrame {
+    bool handle_error = false;
     size_t catch_start = 0;
     size_t finally_start = 0;
 };
@@ -54,7 +55,7 @@ struct CallFrame {
     size_t return_to_pc;
     model::CodeObject* code_object;
     
-    std::vector<TryBlockInfo> try_blocks;
+    std::vector<TryFrame> try_blocks;
 };
 
 class Vm {
@@ -70,7 +71,7 @@ public:
     static bool running;
     static std::string file_path;
 
-    static model::Error* curr_error;
+    static model::Object* curr_error;
 
     static dep::HashMap<model::Object*> std_modules;
 
@@ -140,14 +141,15 @@ private:
     static void exec_SET_NONLOCAL(const Instruction& instruction);
 
     static void exec_ENTER_TRY(const Instruction& instruction);
-    static void exec_POP_TRY_FRAME(const Instruction& instruction);
     static void exec_LOAD_ERROR(const Instruction& instruction);
+    static void exec_JUMP_IF_FINISH_HANDLE_ERROR(const Instruction& instruction);
+    static void exec_MARK_HANDLE_ERROR(const Instruction& instruction);
     static void exec_THROW(const Instruction& instruction);
     static void exec_IMPORT(const Instruction& instruction);
 
     static void exec_JUMP(const Instruction& instruction);
     static void exec_JUMP_IF_FALSE(const Instruction& instruction);
-    static void exec_IS_INSTANCE(const Instruction& instruction);
+    static void exec_IS_CHILD(const Instruction& instruction);
     static void exec_CREATE_OBJECT(const Instruction& instruction);
     static void exec_STOP(const Instruction& instruction);
 };

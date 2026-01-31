@@ -52,7 +52,7 @@ model::CodeObject* IRGenerator::gen(std::unique_ptr<BlockStmt> ast_into) {
     // 处理模块顶层节点
     gen_block(root_block);
 
-    DEBUG_OUTPUT("gen : ir result");
+    std::cout << "== IR Result ==" << std::endl;
     size_t i = 0;
     for (const auto& inst : curr_code_list) {
         std::string opn_text;
@@ -62,6 +62,7 @@ model::CodeObject* IRGenerator::gen(std::unique_ptr<BlockStmt> ast_into) {
         std::cout << i << ":" << opcode_to_string(inst.opc) << " " << opn_text << std::endl;
         ++i;
     }
+    std::cout << "== End ==" << std::endl;
 
     return new model::CodeObject(
         curr_code_list,

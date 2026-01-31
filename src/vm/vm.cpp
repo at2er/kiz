@@ -28,7 +28,7 @@ std::stack<model::Object*> Vm::op_stack{};
 std::vector<std::shared_ptr<CallFrame>> Vm::call_stack{};
 bool Vm::running = false;
 std::string Vm::file_path;
-model::Error* Vm::curr_error {};
+model::Object* Vm::curr_error {};
 dep::HashMap<model::Object*> Vm::std_modules {};
 
 
@@ -89,6 +89,7 @@ void Vm::exec_curr_code() {
         // 执行当前指令
         const Instruction& curr_inst = curr_frame.code_object->code[curr_frame.pc];
         try {
+            std::cout << "Start running instruction at pc = " << call_stack.back()->pc << std::endl;
             execute_instruction(curr_inst);
         } catch (NativeFuncError& e) {
             instruction_throw(e.name, e.msg);
@@ -97,9 +98,10 @@ void Vm::exec_curr_code() {
         DEBUG_OUTPUT("current stack top : " + (op_stack.empty() ? "[Nothing]" : op_stack.top()->debug_string()));
 
         if (curr_inst.opc != Opcode::JUMP && curr_inst.opc != Opcode::JUMP_IF_FALSE &&
-            curr_inst.opc != Opcode::RET) {
+            curr_inst.opc != Opcode::RET && curr_inst.opc != Opcode::JUMP_IF_FINISH_HANDLE_ERROR) {
+            std::cout << "advance pc" << std::endl;
             curr_frame.pc++;
-            }
+        }
     }
 
     DEBUG_OUTPUT("call stack length: " + std::to_string(call_stack.size()));
@@ -146,6 +148,7 @@ void Vm::set_and_exec_curr_code(const model::CodeObject* code_object) {
 }
 
 void Vm::execute_instruction(const Instruction& instruction) {
+    std::cout << "Start running instruction at pc = " << call_stack.back()->pc << std::endl;
     switch (instruction.opc) {
         case Opcode::OP_ADD:          exec_ADD(instruction);          break;
         case Opcode::OP_SUB:          exec_SUB(instruction);          break;
@@ -181,7 +184,8 @@ void Vm::execute_instruction(const Instruction& instruction) {
         case Opcode::SET_LOCAL:       exec_SET_LOCAL(instruction);     break;
 
         case Opcode::ENTER_TRY:       exec_ENTER_TRY(instruction);     break;
-        case Opcode::POP_TRY_FRAME:   exec_POP_TRY_FRAME(instruction); break;
+        case Opcode::MARK_HANDLE_ERROR: exec_MARK_HANDLE_ERROR(instruction); break;
+        case Opcode::JUMP_IF_FINISH_HANDLE_ERROR:  exec_JUMP_IF_FINISH_HANDLE_ERROR(instruction);    break;
 
         case Opcode::IMPORT:          exec_IMPORT(instruction);        break;
         case Opcode::LOAD_ERROR:      exec_LOAD_ERROR(instruction);    break;
@@ -189,8 +193,8 @@ void Vm::execute_instruction(const Instruction& instruction) {
         case Opcode::JUMP:            exec_JUMP(instruction);          break;
         case Opcode::JUMP_IF_FALSE:   exec_JUMP_IF_FALSE(instruction); break;
         case Opcode::THROW:           exec_THROW(instruction);         break;
-        case Opcode::IS_INSTANCE:     exec_IS_INSTANCE(instruction);   break;
-        case Opcode::CREATE_OBJECT:   exec_CREATE_OBJECT(instruction);  break;
+        case Opcode::IS_CHILD:        exec_IS_CHILD(instruction);      break;
+        case Opcode::CREATE_OBJECT:   exec_CREATE_OBJECT(instruction); break;
         case Opcode::STOP:            exec_STOP(instruction);          break;
         default:                      assert(false && "execute_instruction: 未知 opcode");
     }

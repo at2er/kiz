@@ -1,3 +1,5 @@
+#include <format>
+
 #include "../kiz.hpp"
 #include "../op_code/opcode.hpp"
 #include "ir_gen.hpp"
@@ -406,6 +408,7 @@ void IRGenerator::gen_for(ForStmt* for_stmt) {
 void IRGenerator::gen_try(TryStmt* try_stmt) {
     assert(try_stmt);
 
+    // 添加TryFrame{catch_start, finally_start}
     size_t try_start_idx = curr_code_list.size();
     curr_code_list.emplace_back(
         Opcode::ENTER_TRY,
@@ -413,8 +416,13 @@ void IRGenerator::gen_try(TryStmt* try_stmt) {
         try_stmt->pos
     );
 
+    // 生成 try 块的语句
     gen_block(try_stmt->try_block.get());
 
+    // 标记为可以解决错误
+    curr_code_list.emplace_back(Opcode::MARK_HANDLE_ERROR, std::vector<size_t>{}, try_stmt->pos);
+
+    // 跳转到finally
     size_t try_end_idx = curr_code_list.size();
     curr_code_list.emplace_back(
         Opcode::JUMP,
@@ -422,33 +430,52 @@ void IRGenerator::gen_try(TryStmt* try_stmt) {
         try_stmt->pos
     );
 
-    curr_code_list[try_start_idx].opn_list[0] = try_end_idx;
+    curr_code_list[try_start_idx].opn_list[0] = curr_code_list.size();
 
     std::vector<size_t> catch_jump_to_finally;
     for (const auto& catch_stmt : try_stmt->catch_blocks) {
+        // 加载实际错误
         curr_code_list.emplace_back(
             Opcode::LOAD_ERROR, std::vector<size_t>{}, catch_stmt->pos
         );
+
+        // 加载需捕获的错误类 catch e : Error
+        //                           ^^^^^
         gen_expr(catch_stmt->error.get());
 
+        // 判断 需捕获的错误类  是不是 实际错误的原型
         curr_code_list.emplace_back(
-            Opcode::IS_INSTANCE, std::vector<size_t>{}, catch_stmt->pos
+            Opcode::IS_CHILD, std::vector<size_t>{}, catch_stmt->pos
         );
+        // 如果不是就跳转到下一个catch
         size_t curr_jump_if_false_idx = curr_code_list.size();
         curr_code_list.emplace_back(
             Opcode::JUMP_IF_FALSE, std::vector<size_t>{0}, catch_stmt->pos  // 占位
         );
 
+        // 如果是就继续
+        // 标记为可以解决错误
+        curr_code_list.emplace_back(Opcode::MARK_HANDLE_ERROR, std::vector<size_t>{}, try_stmt->pos);
+
+        // 加载实际错误
         curr_code_list.emplace_back(
             Opcode::LOAD_ERROR, std::vector<size_t>{}, catch_stmt->pos
         );
 
+        // 储存到变量
+        // 加载需捕获的错误类 catch e : Error
+        //                      ^^
         const size_t name_idx = get_or_add_name(curr_names, catch_stmt->var_name);
         curr_code_list.emplace_back(
             Opcode::SET_LOCAL, std::vector{name_idx}, catch_stmt->pos
         );
+
+
+        // 生成 catch 块的语句
         gen_block(catch_stmt->catch_block.get());
 
+
+        // 处理后跳转到finally
         catch_jump_to_finally.emplace_back(curr_code_list.size());
         curr_code_list.emplace_back(
             Opcode::JUMP, std::vector<size_t>{0}, catch_stmt->pos  // 占位
@@ -458,19 +485,13 @@ void IRGenerator::gen_try(TryStmt* try_stmt) {
         curr_code_list[curr_jump_if_false_idx].opn_list[0] = end_catch_idx;
     }
 
-    curr_code_list.emplace_back(
-    Opcode::LOAD_ERROR, std::vector<size_t>{}, try_stmt->pos
-    );
-
-    curr_code_list.emplace_back(
-        Opcode::THROW, std::vector<size_t>{}, try_stmt->pos
-    );
-
-    // finally
+    // 生成 finally 块的语句
     const size_t finally_start_idx = curr_code_list.size();
     if (try_stmt->finally_block) {
         gen_block(try_stmt->finally_block.get());
     }
+
+    // 回填 finally 块开始处
     curr_code_list[try_start_idx].opn_list[1] = finally_start_idx;
     curr_code_list[try_end_idx].opn_list[0] = finally_start_idx;
 
@@ -478,9 +499,15 @@ void IRGenerator::gen_try(TryStmt* try_stmt) {
         curr_code_list[pos].opn_list[0] = finally_start_idx;
     }
 
+
+    size_t skip_rethrow_idx = curr_code_list.size();
     curr_code_list.emplace_back(
-        Opcode::POP_TRY_FRAME, std::vector<size_t>{}, try_stmt->pos
+        Opcode::JUMP_IF_FINISH_HANDLE_ERROR, std::vector<size_t>{0}, try_stmt->pos  // 占位
     );
+    curr_code_list.emplace_back( Opcode::LOAD_ERROR, std::vector<size_t>{}, try_stmt->pos);
+    curr_code_list.emplace_back(Opcode::THROW, std::vector<size_t>{}, try_stmt->pos);
+
+    curr_code_list[skip_rethrow_idx].opn_list[0] = curr_code_list.size();
 }
 
 }
