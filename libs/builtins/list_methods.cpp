@@ -251,20 +251,61 @@ Object* list_count(Object* self, const List* args) {
 }
 
 Object* list_find(Object* self, const List* args) {
-    return new Nil();
+    auto func_obj = builtin::get_one_arg(args);
 
+    auto self_list = dynamic_cast<List*>(self);
+    assert(self_list != nullptr);
+
+    for (auto e : self_list->val) {
+        kiz::Vm::call_function(func_obj, new List({e}), nullptr);
+        auto res = kiz::Vm::fetch_one_from_stack_top();
+        if (kiz::Vm::is_true(res)) {
+            res->make_ref();
+            return res;
+        }
+    }
+    return new Nil();
 }
 
 Object* list_map(Object* self, const List* args) {
-    return new Nil();
+    auto func_obj = builtin::get_one_arg(args);
+
+    auto self_list = dynamic_cast<List*>(self);
+    assert(self_list != nullptr);
+
+    std::vector<Object*> new_vec;
+
+    for (auto e : self_list->val) {
+        kiz::Vm::call_function(func_obj, new List({e}), nullptr);
+        auto res = kiz::Vm::fetch_one_from_stack_top();
+        
+        new_vec.push_back(res);
+    }
+    return create_list(new_vec);
 }
 
 Object* list_filter(Object* self, const List* args) {
-    return new Nil();
+    auto func_obj = builtin::get_one_arg(args);
+
+    auto self_list = dynamic_cast<List*>(self);
+    assert(self_list != nullptr);
+
+    std::vector<Object*> new_vec;
+
+    for (auto e : self_list->val) {
+        kiz::Vm::call_function(func_obj, new List({e}), nullptr);
+        auto res = kiz::Vm::fetch_one_from_stack_top();
+        if (kiz::Vm::is_true(res)) {
+            new_vec.push_back(res);
+        }
+    }
+    return create_list(new_vec);
 }
 
 Object* list_len(Object* self, const List* args) {
-    return new Nil();
+    auto self_list = dynamic_cast<List*>(self);
+    assert(self_list != nullptr);
+    return create_int(dep::BigInt(self->val.size()));
 }
 
 }  // namespace model
