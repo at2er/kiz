@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <stdexcept>
 
+namespace dep {
+
 class UTF8Char {
     char buf_[4];
     int len_;
@@ -182,7 +184,7 @@ class UTF8String {
     std::vector<UTF8Char> arr_;
     uint32_t actual_size_;
 
-    ;[[nodiscard]] int compare(const UTF8String &other) const {
+    ;[[nodiscard]] int compare(const UTF8String& other) const {
         size_t min_size = std::min(size(), other.size());
         for (size_t i = 0; i < min_size; i++) {
             int cmp = arr_[i].compare(other.arr_[i]);
@@ -194,12 +196,12 @@ class UTF8String {
 public:
     UTF8String() : actual_size_(0) {}
 
-    UTF8String(const char *str) : actual_size_(0) {
+    UTF8String(const char* str) : actual_size_(0) {
         if (!str) return;
 
         size_t len = strlen(str);
         for (size_t i = 0; i < len; ) {
-            unsigned char byte = static_cast<unsigned char>(str[i]);
+            auto byte = static_cast<unsigned char>(str[i]);
             int cplen = 0;
 
             if ((byte & 0x80) == 0x00) cplen = 1;
@@ -222,7 +224,7 @@ public:
         }
     }
 
-    UTF8String(const std::string &str) : UTF8String(str.c_str()) {}
+    UTF8String(const std::string& str) : UTF8String(str.c_str()) {}
 
     UTF8String(char c) : actual_size_(0) {
         if (c != '\0') {
@@ -231,7 +233,7 @@ public:
         }
     }
 
-    UTF8String(const UTF8Char &ch) : actual_size_(0) {
+    UTF8String(const UTF8Char& ch) : actual_size_(0) {
         if (!ch.empty()) {
             arr_.push_back(ch);
             actual_size_ = ch.bytesize();
@@ -239,15 +241,15 @@ public:
     }
 
     // Copy constructor
-    UTF8String(const UTF8String &other) : arr_(other.arr_), actual_size_(other.actual_size_) {}
+    UTF8String(const UTF8String& other) : arr_(other.arr_), actual_size_(other.actual_size_) {}
 
     // Move constructor
-    UTF8String(UTF8String &&other) noexcept : arr_(std::move(other.arr_)), actual_size_(other.actual_size_) {
+    UTF8String(UTF8String&& other) noexcept : arr_(std::move(other.arr_)), actual_size_(other.actual_size_) {
         other.actual_size_ = 0;
     }
 
     // Assignment operator
-    UTF8String &operator=(const UTF8String &other) {
+    UTF8String& operator=(const UTF8String& other) {
         if (this != &other) {
             arr_ = other.arr_;
             actual_size_ = other.actual_size_;
@@ -256,7 +258,7 @@ public:
     }
 
     // Move assignment operator
-    UTF8String &operator=(UTF8String &&other) noexcept {
+    UTF8String& operator=(UTF8String&& other) noexcept {
         if (this != &other) {
             arr_ = std::move(other.arr_);
             actual_size_ = other.actual_size_;
@@ -266,12 +268,12 @@ public:
     }
 
     // Comparison operators
-    bool operator<(const UTF8String &other) const { return compare(other) < 0; }
-    bool operator>(const UTF8String &other) const { return compare(other) > 0; }
-    bool operator<=(const UTF8String &other) const { return compare(other) <= 0; }
-    bool operator>=(const UTF8String &other) const { return compare(other) >= 0; }
-    bool operator==(const UTF8String &other) const { return compare(other) == 0; }
-    bool operator!=(const UTF8String &other) const { return compare(other) != 0; }
+    bool operator<(const UTF8String& other) const { return compare(other) < 0; }
+    bool operator>(const UTF8String& other) const { return compare(other) > 0; }
+    bool operator<=(const UTF8String& other) const { return compare(other) <= 0; }
+    bool operator>=(const UTF8String& other) const { return compare(other) >= 0; }
+    bool operator==(const UTF8String& other) const { return compare(other) == 0; }
+    bool operator!=(const UTF8String& other) const { return compare(other) != 0; }
 
     // Concatenation
     UTF8String operator+(const UTF8String &other) const {
@@ -280,24 +282,24 @@ public:
         return result;
     }
 
-    UTF8String &operator+=(const UTF8String &other) {
+    UTF8String& operator+=(const UTF8String &other) {
         arr_.insert(arr_.end(), other.arr_.begin(), other.arr_.end());
         actual_size_ += other.actual_size_;
         return *this;
     }
 
-    UTF8String &operator+=(const UTF8Char &ch) {
+    UTF8String& operator+=(const UTF8Char &ch) {
         arr_.push_back(ch);
         actual_size_ += ch.bytesize();
         return *this;
     }
 
-    UTF8String &operator+=(char c) {
+    UTF8String& operator+=(char c) {
         return *this += UTF8Char(c);
     }
 
     // Indexing
-    const UTF8Char &operator[](size_t index) const {
+    const UTF8Char& operator[](size_t index) const {
         if (index >= arr_.size()) {
             static UTF8Char null_char;
             return null_char;
@@ -305,7 +307,7 @@ public:
         return arr_[index];
     }
 
-    UTF8Char &operator[](size_t index) {
+    UTF8Char& operator[](size_t index) {
         if (index >= arr_.size()) {
             throw std::out_of_range("UTF8String index out of range");
         }
@@ -360,7 +362,7 @@ public:
         return result;
     }
 
-    [[nodiscard]] const char *c_str() const {
+    [[nodiscard]] const char* c_str() const {
         // Note: This requires storing the string contiguously
         static thread_local std::string temp;
         temp = to_string();
@@ -369,7 +371,7 @@ public:
 
     // Substring
     [[nodiscard]] UTF8String substr(size_t pos, size_t len = std::string::npos) const {
-        if (pos >= size()) return UTF8String();
+        if (pos >= size()) return {};
 
         UTF8String result;
         size_t end = (len == std::string::npos) ? size() : std::min(pos + len, size());
@@ -406,7 +408,7 @@ public:
             start++;
         }
 
-        if (start == size()) return UTF8String();
+        if (start == size()) return {};
 
         size_t end = size() - 1;
         while (end > start && arr_[end].is_space()) {
@@ -429,6 +431,8 @@ public:
     auto rend() const { return arr_.rend(); }
 };
 
+
+
 // Stream operators
 inline std::ostream &operator<<(std::ostream &os, const UTF8String &str) {
     return os << str.to_string();
@@ -439,4 +443,6 @@ inline std::istream &operator>>(std::istream &is, UTF8String &str) {
     is >> temp;
     str = UTF8String(temp);
     return is;
+}
+
 }

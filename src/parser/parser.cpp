@@ -99,15 +99,15 @@ std::unique_ptr<BlockStmt> Parser::parse(const std::vector<Token>& tokens) {
     std::vector<std::unique_ptr<Stmt>> program_stmts;
 
     // 打印 Token 序列（保留调试逻辑）
-    DEBUG_OUTPUT("=== 所有 Token 序列 ===");
+    std::cout << "=== 所有 Token 序列 ===" << std::endl;
     for (size_t i = 0; i < tokens.size(); i++) {
         const auto& tok = tokens[i];
-        DEBUG_OUTPUT(
+        std::cout << (
             "Token[" + std::to_string(i) + "]: type=" + std::to_string(static_cast<int>(tok.type))
             + ", text='" + tok.text + "', line=" + std::to_string(tok.pos.lno_start)
-        );
+        ) << std::endl;
     }
-    DEBUG_OUTPUT("=== Token 序列结束 ===");
+    std::cout << "=== Token 序列结束 ===" << std::endl;
 
     // 全局块解析：直到 EOF
     while (curr_token().type != TokenType::EndOfFile) {

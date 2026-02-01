@@ -242,7 +242,7 @@ public:
 
     explicit List(std::vector<Object*> val) : val(std::move(val)) {
         attrs.insert("__parent__", based_list);
-        attrs.insert("__current_index__", new Int(dep::BigInt(0)));
+        attrs.insert("__current_index__", new Int(0));
     }
     [[nodiscard]] std::string debug_string() const override {
         std::string result = "[";
@@ -299,6 +299,7 @@ public:
 
     explicit String(std::string val) : val(std::move(val)) {
         attrs.insert("__parent__", based_str);
+        attrs.insert("__current_index__", new Int(0));
     }
     [[nodiscard]] std::string debug_string() const override {
         return '"'+val+'"';
@@ -398,6 +399,10 @@ inline auto load_false() {
 inline auto load_true() {
     unique_true->make_ref();
     return unique_true;
+}
+
+inline auto load_bool(bool b) {
+    return b ? load_false() : load_true();
 }
 
 inline auto create_int(dep::BigInt n) {

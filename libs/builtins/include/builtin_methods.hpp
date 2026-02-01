@@ -68,12 +68,16 @@ Object* str_next(Object* self, const List* args);
 Object* str_getitem(Object* self, const List* args);
 // 普通方法
 Object* str_foreach(Object* self, const List* args);
-Object* str_map(Object* self, const List* args);
 Object* str_count(Object* self, const List* args);
-Object* str_filter(Object* self, const List* args);
 Object* str_startswith(Object* self, const List* args);
 Object* str_endswith(Object* self, const List* args);
 Object* str_len(Object* self, const List* args);
+Object* str_substr(Object* self, const List* args);
+Object* str_is_alaph(Object* self, const List* args);
+Object* str_is_digit(Object* self, const List* args);
+Object* str_to_lower(Object* self, const List* args);
+Object* str_to_upper(Object* self, const List* args);
+
 
 // Dict 类型原生函数
 Object* dict_eq(Object* self, const List* args);

@@ -153,18 +153,16 @@ Object* list_next(Object* self, const List* args) {
     assert(curr_idx_it != nullptr);
 
     auto curr_idx = curr_idx_it->value;
-    auto idx_obj = dynamic_cast<Int*>(curr_idx);
-    assert(idx_obj != nullptr);
 
-    auto index = idx_obj->val.to_unsigned_long_long();
+    auto index =  cast_to_int(curr_idx) ->val.to_unsigned_long_long();
 
     auto self_list = dynamic_cast<List*>(self);
     if (index < self_list->val.size()) {
         auto res = self_list->val[index];
-        self->attrs.insert("__current_index__", new Int(dep::BigInt(index+1)));
+        self->attrs.insert("__current_index__", new Int(index+1));
         return res;
     }
-    self->attrs.insert("__current_index__", new Int(dep::BigInt(0)));
+    self->attrs.insert("__current_index__", new Int(0));
     return new Bool(false);
 }
 
@@ -305,7 +303,7 @@ Object* list_filter(Object* self, const List* args) {
 Object* list_len(Object* self, const List* args) {
     auto self_list = dynamic_cast<List*>(self);
     assert(self_list != nullptr);
-    return create_int(dep::BigInt(self->val.size()));
+    return create_int(dep::BigInt(self_list->val.size()));
 }
 
 }  // namespace model

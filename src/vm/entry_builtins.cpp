@@ -143,6 +143,7 @@ void Vm::entry_builtins() {
     model::based_list->attrs.insert("map", new model::NativeFunction(model::list_map));
     model::based_list->attrs.insert("count", new model::NativeFunction(model::list_count));
     model::based_list->attrs.insert("filter", new model::NativeFunction(model::list_filter));
+    model::based_list->attrs.insert("len", new model::NativeFunction(model::list_len));
 
     // String 类型魔法方法
     model::based_str->attrs.insert("__add__", new model::NativeFunction(model::str_add));
@@ -151,7 +152,19 @@ void Vm::entry_builtins() {
     model::based_str->attrs.insert("__call__", new model::NativeFunction(model::str_call));
     model::based_str->attrs.insert("__bool__", new model::NativeFunction(model::str_bool));
     model::based_str->attrs.insert("__hash__", new model::NativeFunction(model::str_hash));
+    model::based_str->attrs.insert("__getitem__", new model::NativeFunction(model::str_getitem));
     model::based_str->attrs.insert("contains", new model::NativeFunction(model::str_contains));
+    model::based_str->attrs.insert("count", new model::NativeFunction(model::str_count));
+    model::based_str->attrs.insert("foreach", new model::NativeFunction(model::str_foreach));
+    model::based_str->attrs.insert("startswith", new model::NativeFunction(model::str_startswith));
+    model::based_str->attrs.insert("endswith", new model::NativeFunction(model::str_endswith));
+    model::based_str->attrs.insert("substr", new model::NativeFunction(model::str_substr));
+    model::based_str->attrs.insert("len", new model::NativeFunction(model::str_len));
+    model::based_str->attrs.insert("is_alaph", new model::NativeFunction(model::str_is_alaph));
+    model::based_str->attrs.insert("is_digit", new model::NativeFunction(model::str_is_digit));
+    model::based_str->attrs.insert("to_lower", new model::NativeFunction(model::str_to_lower));
+    model::based_str->attrs.insert("to_upper", new model::NativeFunction(model::str_to_upper));
+
 
     model::based_error->attrs.insert("__call__", new model::NativeFunction([](model::Object* self, model::List* args) -> model::Object* {
         assert( args->val.size() == 2);

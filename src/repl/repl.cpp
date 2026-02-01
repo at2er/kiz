@@ -28,6 +28,7 @@ std::string Repl::read(const std::string& prompt) {
     std::cout << Color::BRIGHT_MAGENTA << prompt << Color::RESET;
     std::cout.flush();
     std::string result = get_whole_input(&std::cin, &std::cout);
+    std::cout << "Repl read result (Test)" << result << std::endl;
     return result;
 }
 
