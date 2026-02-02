@@ -49,7 +49,7 @@ set(SRC_FILES
         ${PROJECT_SOURCE_DIR}/src/vm/entry_std_modules.cpp
         ${PROJECT_SOURCE_DIR}/src/vm/entry_builtins.cpp
         ${PROJECT_SOURCE_DIR}/src/vm/handle_error.cpp
-        ${PROJECT_SOURCE_DIR}/src/vm/execute_unit.cpp
+				${PROJECT_SOURCE_DIR}/src/vm/exec_import.cpp
 
         # 工具模块
         ${PROJECT_SOURCE_DIR}/src/error/error_reporter.cpp
@@ -69,8 +69,6 @@ set(LIB_SRC_FILES
         ${PROJECT_SOURCE_DIR}/libs/builtins/dict_methods.cpp
         ${PROJECT_SOURCE_DIR}/libs/builtins/builtin_functions.cpp
         ${PROJECT_SOURCE_DIR}/libs/io/io_lib.cpp
-
-
 )
 
 # ===================== 文件存在性检查（仅检查cpp） =====================
@@ -87,8 +85,7 @@ foreach(lib_file ${LIB_SRC_FILES})
 endforeach()
 
 # 合并所有cpp文件
-set(ALL_SRC_FILES ${SRC_FILES} ${LIB_SRC_FILES}
-        src/vm/exec_import.cpp)
+set(ALL_SRC_FILES ${SRC_FILES} ${LIB_SRC_FILES})
 
 # ===================== 编译配置（核心：让编译器找到hpp） =====================
 # 仅添加cpp到可执行目标

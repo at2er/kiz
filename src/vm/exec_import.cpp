@@ -1,6 +1,7 @@
 #include <cassert>
 #include <fstream>
 
+#include "../kiz.hpp"
 #include "../models/models.hpp"
 #include "vm.hpp"
 #include "builtins/include/builtin_functions.hpp"
@@ -60,7 +61,7 @@ fs::path get_exe_abs_path() {
     char buf[PATH_MAX] = {0};
     ssize_t len = readlink("/proc/self/exe", buf, PATH_MAX - 1);
     if (len == -1) {
-        throw kiz::NativeFuncError("PathError", "Linux readlink /proc/self/exe failed");
+        throw NativeFuncError("PathError", "Linux readlink /proc/self/exe failed");
     }
     exe_path = std::string(buf, len);
 #elif defined(__APPLE__)
@@ -73,7 +74,7 @@ fs::path get_exe_abs_path() {
         std::string big_buf(buf_len, '\0');
         ret = _NSGetExecutablePath(big_buf.data(), &buf_len);
         if (ret != 0) {
-            throw kiz::NativeFuncError("PathError", "macOS _NSGetExecutablePath failed");
+            throw NativeFuncError("PathError", "macOS _NSGetExecutablePath failed");
         }
         exe_path = big_buf;
     } else {
@@ -82,7 +83,7 @@ fs::path get_exe_abs_path() {
     // macOS需将相对路径转换为绝对路径
     exe_path = fs::absolute(exe_path);
 #else
-    throw kiz::KizStopRunningSignal("Unsupported platform");
+    throw KizStopRunningSignal("Unsupported platform");
 #endif
 
     // 确保返回绝对路径（跨平台兜底）
@@ -141,7 +142,7 @@ void Vm::exec_IMPORT(const Instruction& instruction) {
     }
 
     bool file_in_path = false;
-    std::array for_search_paths = {
+    std::array<fs::path, 2> for_search_paths = {
         get_exe_abs_dir() / fs::path(file_path).parent_path() / fs::path(module_path),
         get_exe_abs_dir() / fs::path(module_path)
     };
