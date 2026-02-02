@@ -142,7 +142,7 @@ void Vm::exec_IMPORT(const Instruction& instruction) {
     }
 
     bool file_in_path = false;
-    std::array for_search_paths = {
+    std::array<fs::path, 2> for_search_paths = {
         get_exe_abs_dir() / fs::path(file_path).parent_path() / fs::path(module_path),
         get_exe_abs_dir() / fs::path(module_path)
     };
