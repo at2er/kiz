@@ -22,26 +22,25 @@ kiz-lang 是一门 **面向对象（原型链模型）、强类型+动态类型(
 
 ## 📚 文档完善
 
-    - kiz2026.1 特性文档:
-     [https://github.com/kiz-committee/Kiz-Standard-Documents](https://github.com/kiz-committee/Kiz-Standard-Documents)
+- kiz2026.1 特性文档:
+[https://github.com/kiz-committee/Kiz-Standard-Documents](https://github.com/kiz-committee/Kiz-Standard-Documents)
 
 ## 🔆 结构
 
-    - **ArgParser**: 解析控制台参数
-    - **REPL**: 交互式环境
-    - **Lexer**: 把源代码解析为token流(基于FSM)
-    - **Parser**: 把token流解析为抽象语法树(基于朴素递归下降)
-    - **IRGenerator**: 把抽象语法树解析为字节码
-    - **VM**: 执行字节码(栈式虚拟机)
-     - **Models**: 运行时对象模型系统(包含基于ARC的GC)
-    - **Builtins**: 内置对象/函数
-    - **SrcManager&ErrorReporter**: kiz代码源文件与TraceBack报错器
-    - **Depends**: 非业务工具类(Bigint, Decimal, U8String, HashMap, Dict)
+- **ArgParser**: 解析控制台参数
+- **REPL**: 交互式环境
+- **Lexer**: 把源代码解析为token流(基于FSM)
+- **Parser**: 把token流解析为抽象语法树(基于朴素递归下降)
+- **IRGenerator**: 把抽象语法树解析为字节码
+- **VM**: 执行字节码(栈式虚拟机)
+- **Models**: 运行时对象模型系统(包含基于ARC的GC)
+- **Builtins**: 内置对象/函数
+- **SrcManager&ErrorReporter**: kiz代码源文件与TraceBack报错器
+- **Depends**: 非业务工具类(Bigint, Decimal, U8String, HashMap, Dict)
 
 ## 📃 TODO: 
 
-    - **fixme** 修复for-loop的bug
-    - **feature** 完善Decimal类型的方法
-    - **fixme** 确保引用计数正确
-    - **fixme** 所有报错使用util::err_reporter函数代替现在临时的assert
-    
+- **fixme** 修复for-loop的bug
+- **feature** 完善Decimal类型的方法
+- **fixme** 确保引用计数正确
+- **fixme** 所有报错使用util::err_reporter函数代替现在临时的assert
