@@ -13,7 +13,9 @@ kiz-lang 是一门 **面向对象（原型链模型）、强类型+动态类型(
 
 - 📚 文档完善 :
 
-kiz2026.1文档: [https://github.com/kiz-committee/Kiz-Standard-Documents](https://github.com/kiz-committee/Kiz-Standard-Documents)
+    - kiz2026.1文档:
+
+     [https://github.com/kiz-committee/Kiz-Standard-Documents](https://github.com/kiz-committee/Kiz-Standard-Documents)
 - 🪄 多范式兼容：支持OOP、FP等主流编程范式
 - 🔅 语法极简：关键字集高度精简，仅包含：
 ```kiz
