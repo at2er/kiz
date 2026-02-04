@@ -26,8 +26,8 @@ kiz-lang 是一门 **面向对象（原型链模型）、强类型+动态类型(
 
 ## 📚 文档完善
 - [快速开始](#)
-- [kiz2026文档](#)
-- [如何构建kiz](#)
+- [kiz2026语法与特性文档](#)
+- [从源代码构建kiz指南](#)
 - [项目结构与功能说明](#)
 - [kiz库开发指南](#)
 - [提交issue/bug-report/feature-request/pull-request指南](#)
@@ -45,7 +45,6 @@ kiz-lang 是一门 **面向对象（原型链模型）、强类型+动态类型(
 - **Depends**: 非业务工具类(Bigint, Decimal, U8String, HashMap, Dict)
 
 ## 📃 TODO
-- **fixme** 修复for-loop的bug
 - **feature** 完善Decimal类型的方法
 - **fixme** 确保引用计数正确
 - **fixme** 所有报错使用util::err_reporter函数代替现在临时的assert
