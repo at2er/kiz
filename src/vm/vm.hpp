@@ -126,9 +126,7 @@ private:
     static void exec_GE(const Instruction& instruction);
     static void exec_LE(const Instruction& instruction);
     static void exec_NE(const Instruction& instruction);
-    static void exec_AND(const Instruction& instruction);
     static void exec_NOT(const Instruction& instruction);
-    static void exec_OR(const Instruction& instruction);
     static void exec_IS(const Instruction& instruction);
     static void exec_IN(const Instruction& instruction);
 

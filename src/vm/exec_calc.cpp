@@ -158,40 +158,6 @@ void Vm::exec_NOT(const Instruction& instruction) {
     a->del_ref();
 }
 
-void Vm::exec_AND(const Instruction& instruction) {
-    DEBUG_OUTPUT("exec and...");
-    if (op_stack.size() < 2) {
-        assert(false && "OP_AND: 操作数栈元素不足（需≥2）");
-    }
-    auto b = fetch_one_from_stack_top();
-    auto a = fetch_one_from_stack_top();
-
-    if (!is_true(a)) {
-        push_to_stack(a); // 压回a，继续使用
-        b->del_ref();    // 释放未使用的b
-    } else {
-        push_to_stack(b); // 压回b，继续使用
-        a->del_ref();    // 释放未使用的a
-    }
-}
-
-void Vm::exec_OR(const Instruction& instruction) {
-    DEBUG_OUTPUT("exec or...");
-    if (op_stack.size() < 2) {
-        assert(false && "OP_OR: 操作数栈元素不足（需≥2）");
-    }
-    auto b = fetch_one_from_stack_top();
-    auto a = fetch_one_from_stack_top();
-
-    if (is_true(a)) {
-        push_to_stack(a); // 压回a，继续使用
-        b->del_ref();    // 释放未使用的b
-    } else {
-        push_to_stack(b); // 压回b，继续使用
-        a->del_ref();    // 释放未使用的a
-    }
-}
-
 void Vm::exec_IS(const Instruction& instruction) {
     DEBUG_OUTPUT("exec is...");
     if (op_stack.size() < 2) {

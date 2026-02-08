@@ -31,6 +31,9 @@ set(SRC_FILES
 
         # 编译器模块
         ${PROJECT_SOURCE_DIR}/src/lexer/lexer.cpp
+        ${PROJECT_SOURCE_DIR}/src/lexer/read_string.cpp
+        ${PROJECT_SOURCE_DIR}/src/lexer/read_number.cpp
+        ${PROJECT_SOURCE_DIR}/src/lexer/lexer.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/parser.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/parse_expr.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/parse_stmt.cpp
@@ -49,7 +52,7 @@ set(SRC_FILES
         ${PROJECT_SOURCE_DIR}/src/vm/entry_std_modules.cpp
         ${PROJECT_SOURCE_DIR}/src/vm/entry_builtins.cpp
         ${PROJECT_SOURCE_DIR}/src/vm/handle_error.cpp
-				${PROJECT_SOURCE_DIR}/src/vm/exec_import.cpp
+        ${PROJECT_SOURCE_DIR}/src/vm/exec_import.cpp
 
         # 工具模块
         ${PROJECT_SOURCE_DIR}/src/error/error_reporter.cpp

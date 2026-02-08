@@ -13,40 +13,6 @@
 #include "../../deps/u8str.hpp"
 #include "../error/error_reporter.hpp"
 
-// 常用字符常量
-static const dep::UTF8Char CHAR_M('M');
-static const dep::UTF8Char CHAR_m('m');
-static const dep::UTF8Char CHAR_QUOTE('"');
-static const dep::UTF8Char CHAR_SQUOTE('\'');
-static const dep::UTF8Char CHAR_HASH('#');
-static const dep::UTF8Char CHAR_SLASH('/');
-static const dep::UTF8Char CHAR_STAR('*');
-static const dep::UTF8Char CHAR_EQUAL('=');
-static const dep::UTF8Char CHAR_EXCLAM('!');
-static const dep::UTF8Char CHAR_LESS('<');
-static const dep::UTF8Char CHAR_GREATER('>');
-static const dep::UTF8Char CHAR_MINUS('-');
-static const dep::UTF8Char CHAR_COLON(':');
-static const dep::UTF8Char CHAR_DOT('.');
-static const dep::UTF8Char CHAR_BACKSLASH('\\');
-static const dep::UTF8Char CHAR_NEWLINE('\n');
-static const dep::UTF8Char CHAR_RETURN('\r');
-static const dep::UTF8Char CHAR_PLUS('+');
-static const dep::UTF8Char CHAR_PERCENT('%');
-static const dep::UTF8Char CHAR_CARET('^');
-static const dep::UTF8Char CHAR_PIPE('|');
-static const dep::UTF8Char CHAR_COMMA(',');
-static const dep::UTF8Char CHAR_SEMICOLON(';');
-static const dep::UTF8Char CHAR_LPAREN('(');
-static const dep::UTF8Char CHAR_RPAREN(')');
-static const dep::UTF8Char CHAR_LBRACE('{');
-static const dep::UTF8Char CHAR_RBRACE('}');
-static const dep::UTF8Char CHAR_LBRACKET('[');
-static const dep::UTF8Char CHAR_RBRACKET(']');
-static const dep::UTF8Char CHAR_e('e');
-static const dep::UTF8Char CHAR_E('E');
-static const dep::UTF8Char CHAR_SPACE(' ');
-
 namespace kiz {
 
 // Token 类型
@@ -124,38 +90,16 @@ enum class LexState {
 
 // 词法分析器类：重构为FSM，基于UTF8Char/UTF8String
 class Lexer {
-    const std::string& file_path_;  // 文件名（错误报告）
+    const std::string& file_path_;  // 文件名（用于错误报告）
     dep::UTF8String src_;           // 源文件UTF-8字符串
     std::vector<Token> tokens_;     // 生成的Token列表
     std::unordered_map<std::string, TokenType> keywords_; // 关键字映射
 
     // FSM核心状态变量
     LexState curr_state_ = LexState::Start; // 当前状态
-    size_t cp_pos_ = 0;                     // 当前码点索引
+    size_t char_pos_ = 0;                   // 当前字符索引
     size_t lineno_ = 1;                     // 当前行号
-    size_t col_ = 1;                        // 当前列号（按码点计数）
-    size_t total_cp_ = 0;                   // 总码点数量
-
-    // 辅助函数
-    static bool is_newline(const dep::UTF8Char& ch) {
-        return ch == CHAR_NEWLINE;  // 只检查\n
-    }
-
-    static bool is_space(dep::UTF8Char ch) {
-        return ch.is_space();
-    }
-
-    static bool is_digit(dep::UTF8Char ch) {
-        return ch.is_digit();
-    }
-
-    static bool is_alpha_under(dep::UTF8Char ch) {
-        return ch.is_alpha() || ch.to_cod_point() == U'_';
-    }
-
-    static bool is_ident_continue(dep::UTF8Char ch) {
-        return ch.is_alnum() || ch.to_cod_point() == U'_';
-    }
+    size_t col_ = 1;                        // 当前列号
 
     /// 初始化关键字（仅执行一次）
     void init_keywords();
@@ -173,18 +117,31 @@ class Lexer {
 
     /// 预读下一个码点（不移动cp_pos_）
     dep::UTF8Char peek(size_t offset = 1) const {
-        if (cp_pos_ + offset >= total_cp_) {
-            return {'\0'};
-        }
-        return src_[cp_pos_ + offset];
+        return src_[char_pos_ + offset];
     }
 
     /// 读取当前码点并移动cp_pos_（更新行号/列号）
     dep::UTF8Char next();
 
 public:
-    explicit Lexer(const std::string& file_path) : file_path_(file_path) { init_keywords(); }
-    std::vector<Token> tokenize(const std::string& src, size_t lineno_start = 1);
+    explicit Lexer(const std::string& file_path)
+    : file_path_(file_path) {
+        init_keywords();
+    }
+    void prepare(const std::string& src, size_t lineno_start = 1) {
+        // 初始化状态
+        src_ = dep::UTF8String(src);
+        tokens_.clear();
+        curr_state_ = LexState::Start;
+        char_pos_ = 0;
+        lineno_ = lineno_start;
+        col_ = 1;
+    }
+    std::vector<Token> tokenize();
+    void read_mstring();
+    void read_string();
+    void read_fstring();
+    void read_num();
 };
 
 }  // namespace kiz

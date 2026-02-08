@@ -150,14 +150,15 @@ void Repl::eval_and_print(const std::string& cmd, const size_t startline) {
     bool should_print = false;
 
     // init
-    kiz::Lexer lexer(file_path);
     kiz::Parser parser(file_path);
     kiz::IRGenerator ir_gen(file_path);
 
     //auto lineno_start = get_history().size();
     auto lineno_start = startline;
     // 问题：原先REPL只支持一行输入，然后当前的行数恰恰就包含了那仅仅一条的新输入的语句，所以没有任何问题，但是现在支持了多行输入，应当从第一行多行输入的地方开始解析！
-    const auto tokens = lexer.tokenize(cmd, lineno_start);
+    kiz::Lexer lexer(file_path);
+    lexer.prepare(cmd, lineno_start);
+    const auto tokens = lexer.tokenize();
 
     auto ast = parser.parse(tokens);
     if (!ast->statements.empty() &&

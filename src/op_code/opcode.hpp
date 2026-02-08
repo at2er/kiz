@@ -15,7 +15,7 @@ enum class Opcode : uint8_t {
     OP_MOD, OP_POW, OP_NEG,
     OP_EQ, OP_GT, OP_LT,
     OP_GE, OP_LE, OP_NE,
-    OP_AND, OP_NOT, OP_OR,
+    OP_NOT,
     OP_IS, OP_IN,
 
     CALL, RET,
@@ -54,9 +54,7 @@ inline std::string opcode_to_string(Opcode opc) {
     case Opcode::OP_GE:       return "OP_GE";
     case Opcode::OP_LE:       return "OP_LE";
     case Opcode::OP_NE:       return "OP_NE";
-    case Opcode::OP_AND:      return "OP_AND";
     case Opcode::OP_NOT:      return "OP_NOT";
-    case Opcode::OP_OR:       return "OP_OR";
 
     case Opcode::OP_IS:       return "OP_IS";
     case Opcode::OP_IN:       return "OP_IN";

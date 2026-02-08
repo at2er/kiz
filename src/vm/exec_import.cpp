@@ -188,8 +188,9 @@ void Vm::exec_IMPORT(const Instruction& instruction) {
     Lexer lexer(module_path);
     Parser parser(module_path);
     IRGenerator ir_gen(module_path);
-    
-    const auto tokens = lexer.tokenize(content);
+
+    lexer.prepare(content);
+    const auto tokens = lexer.tokenize();
     auto ast = parser.parse(tokens);
     const auto ir = ir_gen.gen(std::move(ast));
     auto module_obj = IRGenerator::gen_mod(module_path, ir);

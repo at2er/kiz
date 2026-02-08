@@ -142,7 +142,8 @@ void run_file(const std::string& path) {
     kiz::IRGenerator ir_gen(path);
     kiz::Vm vm (path); // 初始化vm
 
-    const auto tokens = lexer.tokenize(content);
+    lexer.prepare(content);
+    const auto tokens = lexer.tokenize();
     auto ast = parser.parse(tokens);
     const auto ir = ir_gen.gen(std::move(ast));
     auto module = kiz::IRGenerator::gen_mod(path, ir);

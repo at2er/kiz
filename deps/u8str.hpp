@@ -124,9 +124,86 @@ public:
     bool operator==(const UTF8Char &other) const { return compare(other) == 0; }
     bool operator!=(const UTF8Char &other) const { return compare(other) != 0; }
 
+    // UTF8Char 类中的 is_alpha() 函数修改后版本
     [[nodiscard]] bool is_alpha() const {
         uint32_t cp = to_cod_point();
-        return (cp >= 'A' && cp <= 'Z') || (cp >= 'a' && cp <= 'z');
+
+        // 英文字母 (基本拉丁字母)
+        if ((cp >= 'A' && cp <= 'Z') || (cp >= 'a' && cp <= 'z')) {
+            return true;
+        }
+
+        // 中文字符范围 (CJK统一表意文字)
+        //    基本汉字: 0x4E00 - 0x9FFF
+        //    扩展A: 0x3400 - 0x4DBF
+        //    扩展B: 0x20000 - 0x2A6DF (需要4字节UTF-8)
+        //    扩展C: 0x2A700 - 0x2B73F
+        //    扩展D: 0x2B740 - 0x2B81F
+        //    扩展E: 0x2B820 - 0x2CEAF
+        //    扩展F: 0x2CEB0 - 0x2EBEF
+        if ((cp >= 0x4E00 && cp <= 0x9FFF) ||        // 基本汉字
+            (cp >= 0x3400 && cp <= 0x4DBF) ||        // 扩展A
+            (cp >= 0x20000 && cp <= 0x2A6DF) ||      // 扩展B
+            (cp >= 0x2A700 && cp <= 0x2B73F) ||      // 扩展C
+            (cp >= 0x2B740 && cp <= 0x2B81F) ||      // 扩展D
+            (cp >= 0x2B820 && cp <= 0x2CEAF) ||      // 扩展E
+            (cp >= 0x2CEB0 && cp <= 0x2EBEF)) {      // 扩展F
+            return true;
+            }
+
+        // 日文假名
+        //    平假名: 0x3040 - 0x309F
+        //    片假名: 0x30A0 - 0x30FF
+        //    片假名音标扩展: 0x31F0 - 0x31FF
+        if ((cp >= 0x3040 && cp <= 0x309F) ||        // 平假名
+            (cp >= 0x30A0 && cp <= 0x30FF) ||        // 片假名
+            (cp >= 0x31F0 && cp <= 0x31FF)) {        // 片假名音标扩展
+            return true;
+            }
+
+        // 韩文字母 (Hangul)
+        //    韩文音节: 0xAC00 - 0xD7AF
+        //    韩文字母: 0x1100 - 0x11FF
+        //    韩文兼容字母: 0x3130 - 0x318F
+        if ((cp >= 0xAC00 && cp <= 0xD7AF) ||        // 韩文音节
+            (cp >= 0x1100 && cp <= 0x11FF) ||        // 韩文字母
+            (cp >= 0x3130 && cp <= 0x318F)) {        // 韩文兼容字母
+            return true;
+            }
+
+        // 其他常见字母系统
+        //    拉丁字母补充 (带重音符号): 0x00C0 - 0x00FF
+        //    希腊字母: 0x0370 - 0x03FF
+        //    西里尔字母: 0x0400 - 0x04FF
+        //    阿拉伯字母: 0x0600 - 0x06FF
+        //    希伯来字母: 0x0590 - 0x05FF
+        //    泰文字母: 0x0E00 - 0x0E7F
+        //    梵文字母: 0x0900 - 0x097F
+        if ((cp >= 0x00C0 && cp <= 0x00FF && cp != 0x00D7 && cp != 0x00F7) || // 拉丁字母补充，排除乘除号
+            (cp >= 0x0370 && cp <= 0x03FF) ||        // 希腊字母
+            (cp >= 0x0400 && cp <= 0x04FF) ||        // 西里尔字母
+            (cp >= 0x0600 && cp <= 0x06FF) ||        // 阿拉伯字母
+            (cp >= 0x0590 && cp <= 0x05FF) ||        // 希伯来字母
+            (cp >= 0x0E00 && cp <= 0x0E7F) ||        // 泰文字母
+            (cp >= 0x0900 && cp <= 0x097F)) {        // 梵文字母
+            return true;
+            }
+
+        //全角字母 (全角英文字母)
+        if ((cp >= 0xFF21 && cp <= 0xFF3A) ||        // 全角大写字母
+            (cp >= 0xFF41 && cp <= 0xFF5A)) {        // 全角小写字母
+            return true;
+            }
+
+        // 特殊字母字符
+        // 字母数字符号 (如罗马数字): 0x2160 - 0x2188
+        // 带圈字母数字: 0x2460 - 0x24FF
+        if ((cp >= 0x2160 && cp <= 0x2188) ||        // 罗马数字等
+            (cp >= 0x2460 && cp <= 0x24FF)) {        // 带圈字母数字
+            return true;
+            }
+
+        return false;
     }
 
     [[nodiscard]] bool is_digit() const {
