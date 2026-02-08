@@ -326,9 +326,9 @@ std::vector<Token> Lexer::tokenize(const std::string& src, size_t lineno_start) 
         }
 
         // ======================================
-// 模板字符串状态 f"/F"（修复后）
-// ======================================
-case LexState::FString: {
+        // 模板字符串状态 f"/F"（修复后）
+        // ======================================
+        case LexState::FString: {
             size_t start_cp = cp_pos_;
             size_t start_lno = lineno_;
             size_t start_col = col_;
@@ -349,20 +349,22 @@ case LexState::FString: {
             }
             next(); // 跳过开头引号
 
-            // 解析f-string内容
+            // 解析f-string内容（核心修复：将变量移到循环外，支持切回后继续使用）
             dep::UTF8String str_content;
             bool unclosed = true;
-            // 新增：记录字符串内容的起始码点位置
-            size_t str_content_start = cp_pos_;
+            size_t str_content_start = cp_pos_; // 初始化起始位置
+            bool missing_rbrace = false;        // 新增：标记是否缺少 }
+
+            // 核心修复：循环独立，支持从 FStringExpr 切回后继续解析
+            bool break_it = false;
             while (cp_pos_ < total_cp_) {
                 dep::UTF8Char c = src_[cp_pos_];
 
                 // 遇到结束引号，终止解析
                 if (c == quote_char) {
                     unclosed = false;
-                    // 关键修复1：先处理剩余字符串，再跳过结束引号
+                    // 输出剩余的普通字符串
                     if (!str_content.empty()) {
-                        // 正确计算：起始位置是str_content_start，结束位置是当前cp_pos_（不包含结束引号）
                         emit_token(TokenType::String, str_content_start, cp_pos_,
                                   lineno_, col_ - str_content.size(), lineno_, col_ - 1);
                         str_content = "";
@@ -386,50 +388,42 @@ case LexState::FString: {
                     emit_token(TokenType::InsertExprStart, brace_start, cp_pos_,
                               lineno_, col_ - 1, lineno_, col_ - 1);
 
-                    // 解析表达式内容（直到}，不处理嵌套）
-                    size_t expr_start = cp_pos_;
-                    size_t expr_start_col = col_; // 记录表达式起始列号
-                    while (cp_pos_ < total_cp_ && src_[cp_pos_] != CHAR_RBRACE) {
-                        next(); // 消费表达式字符
-                    }
-
-                    // 生成表达式标识符Token（简化版：假设是单个标识符）
-                    if (expr_start < cp_pos_) {
-                        emit_token(TokenType::Identifier, expr_start, cp_pos_,
-                                  lineno_, expr_start_col, lineno_, col_ - 1);
-                    }
-
-                    // 生成InsertExprEnd Token
-                    size_t rbrace_start = cp_pos_;
-                    next(); // 跳过}
-                    emit_token(TokenType::InsertExprEnd, rbrace_start, cp_pos_,
-                              lineno_, col_ - 1, lineno_, col_ - 1);
-
-                    // 重置字符串起始位置（表达式后继续收集字符串）
-                    str_content_start = cp_pos_;
-                    continue;
+                    // 切换到 FStringExpr 状态解析表达式
+                    curr_state_ = LexState::FStringExpr;
+                    str_content_start = cp_pos_; // 重置下一段字符串的起始位置
+                    break_it = true; // 核心修复：退出当前循环，回到主状态机循环
+                    break;
                 }
 
                 // 普通字符，收集到字符串缓冲区
                 str_content += c;
                 next(); // 消费字符
             }
+            if (break_it) {
+                break;
+            }
 
-            // 关键修复2：移除重复的剩余字符串处理（已移到结束引号判断内）
+            // 生成FStringEnd Token（仅在正确解析完成后生成）
+            if (!unclosed && !missing_rbrace) {
+                emit_token(TokenType::FStringEnd, cp_pos_, cp_pos_,
+                          lineno_, col_ - 1, lineno_, col_ - 1);
+            }
 
-            // 生成FStringEnd Token（关键修复3：修正位置和范围）
-            emit_token(TokenType::FStringEnd, cp_pos_, cp_pos_, // end_cp = cp_pos_（不扩展）
-                      lineno_, col_ - 1, lineno_, col_ - 1); // 位置修正为当前列-1
-
-            // 未闭合的f-string报错
+            // 错误报告（细分错误类型）
             if (unclosed) {
                 err::error_reporter(file_path_, {start_lno, lineno_, start_col, col_},
-                                  "SyntaxError", "Unclosed f-string literal");
+                                  "SyntaxError", "Unclosed f-string literal (missing closing quote)");
+            }
+            if (missing_rbrace) {
+                err::error_reporter(file_path_, {start_lno, lineno_, start_col, col_},
+                                  "SyntaxError", "Missing '}' in f-string");
             }
 
             curr_state_ = LexState::Start;
             break;
         }
+
+
 
         // ======================================
         // 标识符/关键字状态

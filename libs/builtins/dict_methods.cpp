@@ -5,8 +5,7 @@ namespace model {
 
 dep::BigInt hash_object(Object* key_obj) {
     // hash对象
-    auto hash_method = kiz::Vm::get_attr(key_obj, "__hash__");
-    kiz::Vm::call_function(hash_method, new List({}), key_obj);
+    kiz::Vm::call_method(key_obj, "__hash__", new List({}));
 
     const auto result = kiz::Vm::fetch_one_from_stack_top();
     assert(result != nullptr);
@@ -55,8 +54,7 @@ Object* dict_contains(Object* self, const List* args) {
     // 键
     auto key_obj = args->val[0];
 
-    auto hash_method = kiz::Vm::get_attr(key_obj, "__hash__");
-    kiz::Vm::call_function(hash_method, new List({}), key_obj);
+    kiz::Vm::call_method(key_obj, "__hash__", new List({}));
 
     const auto result = kiz::Vm::fetch_one_from_stack_top();
     assert(result != nullptr);

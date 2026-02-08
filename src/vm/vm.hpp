@@ -164,6 +164,7 @@ private:
     static void exec_IS_CHILD(const Instruction& instruction);
     static void exec_CREATE_OBJECT(const Instruction& instruction);
     static void exec_STOP(const Instruction& instruction);
+    static void exec_COPY_TOP(const Instruction& instruction);
 };
 
 } // namespace kiz

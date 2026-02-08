@@ -55,7 +55,33 @@ void IRGenerator::gen_expr(Expr* expr) {
         case AstType::BinaryExpr: {
             // 二元运算：生成左表达式 -> 右表达式 -> 运算指令
             const auto* bin_expr = dynamic_cast<BinaryExpr*>(expr);
+            if (bin_expr->op == "and"){
+                gen_expr(bin_expr->left.get());  // 左操作数
+
+                curr_code_list.emplace_back(Opcode::COPY_TOP, std::vector<size_t>{}, expr->pos);
+
+                size_t jump_if_false_idx = curr_code_list.size();
+                curr_code_list.emplace_back(Opcode::JUMP_IF_FALSE, std::vector<size_t>{0}, expr->pos);
+
+                gen_expr(bin_expr->right.get()); // 右操作数（栈中顺序：左在下，右在上）
+                curr_code_list[jump_if_false_idx].opn_list[0] = curr_code_list.size();
+                break;
+            }
+            if (bin_expr->op == "or") {
+                gen_expr(bin_expr->left.get());  // 左操作数
+
+                curr_code_list.emplace_back(Opcode::COPY_TOP, std::vector<size_t>{}, expr->pos);
+
+                curr_code_list.emplace_back(Opcode::OP_NOT, std::vector<size_t>{}, expr->pos);
+                size_t jump_if_false_idx = curr_code_list.size();
+                curr_code_list.emplace_back(Opcode::JUMP_IF_FALSE, std::vector<size_t>{0}, expr->pos);
+
+                gen_expr(bin_expr->right.get()); // 右操作数（栈中顺序：左在下，右在上）
+                curr_code_list[jump_if_false_idx].opn_list[0] = curr_code_list.size();
+                break;
+            }
             gen_expr(bin_expr->left.get());  // 左操作数
+
             gen_expr(bin_expr->right.get()); // 右操作数（栈中顺序：左在下，右在上）
 
             // 映射运算符到 opcode
@@ -74,8 +100,6 @@ void IRGenerator::gen_expr(Expr* expr) {
             else if (bin_expr->op == ">") opc = Opcode::OP_GT;
             else if (bin_expr->op == "<") opc = Opcode::OP_LT;
 
-            else if (bin_expr->op == "and") opc = Opcode::OP_AND;
-            else if (bin_expr->op == "or") opc = Opcode::OP_OR;
             else if (bin_expr->op == "is") opc = Opcode::OP_IS;
             else if (bin_expr->op == "in") opc = Opcode::OP_IN;
 

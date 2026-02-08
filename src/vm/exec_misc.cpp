@@ -127,7 +127,7 @@ void Vm::exec_JUMP_IF_FALSE(const Instruction& instruction) {
     if (instruction.opn_list.empty()) assert(false && "JUMP_IF_FALSE: 无目标pc");
 
     // 取出条件值
-    model::Object* cond =fetch_one_from_stack_top();
+    model::Object* cond = fetch_one_from_stack_top();
     const size_t target_pc = instruction.opn_list[0];
 
     bool need_jump = is_true(cond) ? false: true;
@@ -152,8 +152,8 @@ void Vm::exec_JUMP_IF_FALSE(const Instruction& instruction) {
 void Vm::exec_CREATE_OBJECT(const Instruction& instruction) {
     auto obj = new model::Object();
     obj->make_ref(); // 创建即计数
-    obj->attrs.insert("__parent__", model::based_obj);
-    push_to_stack(obj); // push自动make_ref()，计数变为2，栈释放后回到1
+    obj->attrs_insert("__parent__", model::based_obj);
+    push_to_stack(obj); // push自动make_ref()，计数变为3，栈释放后回到2
 }
 
 void Vm::exec_STOP(const Instruction& instruction) {
@@ -200,6 +200,12 @@ void Vm::exec_JUMP_IF_FINISH_ITER(const Instruction& instruction) {
     }
     call_stack.back()->pc ++;
     obj->del_ref(); // 修复：释放使用后的obj
+}
+
+void Vm::exec_COPY_TOP(const Instruction& instruction) {
+    auto obj = fetch_one_from_stack_top();
+    push_to_stack(obj);
+    push_to_stack(obj);
 }
 
 }

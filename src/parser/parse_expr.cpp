@@ -184,14 +184,21 @@ std::unique_ptr<Expr> Parser::parse_primary() {
                 }
             } else if (curr_token().type == TokenType::InsertExprStart) {
                 // 解析插入表达式
-                skip_token(); // 跳过InsertExprStart
+                const auto insert_expr_start_tok = skip_token(); // 跳过InsertExprStart
 
                 // 递归解析表达式（支持任意合法表达式）
-                auto expr = parse_expression();
+                // 转Str
+                auto args = std::vector<std::unique_ptr<Expr>> ();
+                args.emplace_back(std::move(parse_expression()));
+                auto expr = std::make_unique<CallExpr>(
+                    insert_expr_start_tok.pos,
+                    std::make_unique<IdentifierExpr>(insert_expr_start_tok.pos, "Str"),
+                    std::move(args)
+                );
 
                 // 跳过InsertExprEnd
                 if (curr_token().type != TokenType::InsertExprEnd) {
-                    assert(false && "Missing '}' in f-string");
+                    err::error_reporter(file_path, curr_token().pos, "SyntaxError", "Missing '}' in f-string");
                 }
                 skip_token();
 
@@ -207,7 +214,7 @@ std::unique_ptr<Expr> Parser::parse_primary() {
                     );
                 }
             } else {
-                assert(false && "Invalid token in f-string");
+                err::error_reporter(file_path, curr_token().pos, "SyntaxError", "Invalid token in f-string");
             }
         }
 

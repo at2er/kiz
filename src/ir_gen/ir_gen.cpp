@@ -53,17 +53,17 @@ model::CodeObject* IRGenerator::gen(std::unique_ptr<BlockStmt> ast_into) {
     // 处理模块顶层节点
     gen_block(root_block);
 
-    // std::cout << "== IR Result ==" << std::endl;
-    // size_t i = 0;
-    // for (const auto& inst : curr_code_list) {
-    //     std::string opn_text;
-    //     for (auto opn : inst.opn_list) {
-    //         opn_text += std::to_string(opn) + ",";
-    //     }
-    //     std::cout << i << ":" << opcode_to_string(inst.opc) << " " << opn_text << std::endl;
-    //     ++i;
-    // }
-    // std::cout << "== End ==" << std::endl;
+    std::cout << "== IR Result ==" << std::endl;
+    size_t i = 0;
+    for (const auto& inst : curr_code_list) {
+        std::string opn_text;
+        for (auto opn : inst.opn_list) {
+            opn_text += std::to_string(opn) + ",";
+        }
+        std::cout << i << ":" << opcode_to_string(inst.opc) << " " << opn_text << std::endl;
+        ++i;
+    }
+    std::cout << "== End ==" << std::endl;
 
     auto code = new model::CodeObject(
         curr_code_list,
@@ -94,10 +94,13 @@ model::Int* IRGenerator::make_int_obj(const NumberExpr* num_expr) {
     assert(num_expr && "make_int_obj: 数字节点为空");
     auto the_num = dep::BigInt(num_expr->value);
     if (the_num >= 0 and the_num < 201) {
-        return Vm::small_int_pool[the_num.to_unsigned_long_long()];
+        auto obj = Vm::small_int_pool[the_num.to_unsigned_long_long()];
+        obj->make_ref();
+        return obj;
     }
 
     auto int_obj = new model::Int( the_num );
+    int_obj->make_ref();
     return int_obj;
 }
 
@@ -106,6 +109,7 @@ model::Decimal* IRGenerator::make_decimal_obj(const DecimalExpr* dec_expr) {
     DEBUG_OUTPUT("making rational object...");
     auto decimal_str = dep::Decimal(dec_expr->value);
     auto decimal_obj = new model::Decimal(decimal_str);
+    decimal_obj->make_ref();
     return decimal_obj;
 }
 
@@ -113,6 +117,7 @@ model::String* IRGenerator::make_string_obj(const StringExpr* str_expr) {
     DEBUG_OUTPUT("making string object...");
     assert(str_expr && "make_string_obj: 字符串节点为空");
     auto str_obj = new model::String(str_expr->value);
+    str_obj->make_ref();
     return str_obj;
 }
 

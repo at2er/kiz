@@ -32,7 +32,7 @@ enum class Opcode : uint8_t {
     JUMP_IF_FINISH_HANDLE_ERROR, LOAD_ERROR,
     CACHE_ITER, GET_ITER, POP_ITER, JUMP_IF_FINISH_ITER,
 
-    IS_CHILD, CREATE_OBJECT,
+    IS_CHILD, CREATE_OBJECT, COPY_TOP,
     STOP
 };
 
@@ -102,6 +102,7 @@ inline std::string opcode_to_string(Opcode opc) {
     case Opcode::IS_CHILD: return "IS_CHILD";
     case Opcode::CREATE_OBJECT: return "CREATE_OBJECT";
     case Opcode::STOP:        return "STOP";
+    case Opcode::COPY_TOP:    return "COPY_TOP";
 
     // 兜底
     default:                  return "UNKNOWN_OPCODE(" + std::to_string(static_cast<int>(opc)) + ")";
